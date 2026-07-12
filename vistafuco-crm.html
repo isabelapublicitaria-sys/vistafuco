@@ -1,0 +1,1308 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --cream:#FAF6EE;
+    --paper:#FFFFFF;
+    --ink:#2B2118;
+    --ink-soft:#6B5D4F;
+    --clay:#B8936B;
+    --clay-deep:#8C5A3C;
+    --line:#E9DFD0;
+    --rose:#C98A7D;
+    --ochre:#C79A3A;
+    --blue:#7C93A8;
+    --sage:#7C9A79;
+    --plum:#9B7C9A;
+    --danger:#B5533F;
+    --shadow: 0 1px 2px rgba(43,33,24,0.06), 0 6px 20px rgba(43,33,24,0.06);
+  }
+
+  .vfcrm{
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    background:var(--cream);
+    min-height:600px;
+    border-radius:12px;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .vfcrm *{box-sizing:border-box;}
+  .vfcrm h1,.vfcrm h2,.vfcrm h3,.vfcrm .display{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+  }
+
+  /* ---------- Gate (login / setup) screens ---------- */
+  .gate{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 20px;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(184,147,107,0.14), transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(124,154,121,0.12), transparent 40%),
+      var(--cream);
+  }
+  .gate-card{
+    width:100%;
+    max-width:360px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:32px 28px 28px;
+    box-shadow:var(--shadow);
+    text-align:center;
+  }
+  .tag-icon{
+    width:52px;height:52px;
+    margin:0 auto 14px;
+    border-radius:14px;
+    background:var(--clay);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.12);
+  }
+  .tag-icon::after{
+    content:'';
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--cream);
+    position:absolute;
+    top:8px; left:8px;
+  }
+  .tag-icon svg{width:26px;height:26px;}
+  .gate-card h1{font-size:21px;margin:0 0 4px;}
+  .gate-sub{font-size:13.5px;color:var(--ink-soft);margin:0 0 22px;line-height:1.5;}
+  .field{text-align:left;margin-bottom:14px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:6px;}
+  .field input, .field select, .field textarea{
+    width:100%;
+    border:1.5px solid var(--line);
+    background:var(--cream);
+    border-radius:10px;
+    padding:10px 12px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-color:var(--clay);
+    background:var(--paper);
+  }
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    border:none;border-radius:10px;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:14px;
+    padding:11px 16px;cursor:pointer;
+    transition:transform .08s ease, background .15s ease, opacity .15s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--clay-deep);color:#fff;width:100%;}
+  .btn-primary:hover{background:#764a32;}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);}
+  .btn-ghost:hover{color:var(--ink);}
+  .gate-error{
+    background:#FBEAE6;color:var(--danger);
+    font-size:12.5px;font-weight:600;
+    border-radius:8px;padding:8px 10px;margin-bottom:14px;
+    display:none;
+  }
+  .gate-error.show{display:block;}
+  .gate-switch{margin-top:16px;font-size:12.5px;color:var(--ink-soft);}
+  .gate-switch button{background:none;border:none;color:var(--clay-deep);font-weight:600;cursor:pointer;font-size:12.5px;text-decoration:underline;}
+  .shake{animation:shake .35s;}
+  @keyframes shake{
+    10%,90%{transform:translateX(-1px)}
+    20%,80%{transform:translateX(2px)}
+    30%,50%,70%{transform:translateX(-4px)}
+    40%,60%{transform:translateX(4px)}
+  }
+
+  /* ---------- Main app ---------- */
+  .app{display:none; flex:1; flex-direction:column; min-height:600px;}
+  .app.active{display:flex;}
+
+  .topbar{
+    display:flex;align-items:center;gap:14px;
+    padding:16px 20px;
+    background:var(--paper);
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:10px;margin-right:auto;}
+  .brand .tag-icon{width:36px;height:36px;border-radius:10px;margin:0;}
+  .brand .tag-icon svg{width:18px;height:18px;}
+  .brand-text h1{font-size:16px;margin:0;line-height:1.15;}
+  .brand-text span{font-size:11.5px;color:var(--ink-soft);}
+  .search-wrap{position:relative;}
+  .search-wrap input{
+    width:220px;
+    border:1.5px solid var(--line);
+    background:var(--cream);
+    border-radius:10px;
+    padding:9px 12px 9px 32px;
+    font-size:13.5px;
+    font-family:'Inter',sans-serif;
+    outline:none;
+  }
+  .search-wrap input:focus{border-color:var(--clay);}
+  .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--ink-soft);}
+  .btn-small{padding:9px 14px;font-size:13.5px;}
+  .btn-add{background:var(--clay-deep);color:#fff;}
+  .btn-add:hover{background:#764a32;}
+  .btn-logout{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line);}
+  .btn-logout:hover{color:var(--ink);border-color:var(--clay);}
+
+  .board{
+    flex:1;
+    display:flex;
+    gap:14px;
+    padding:18px 20px 24px;
+    overflow-x:auto;
+    align-items:flex-start;
+  }
+  .column{
+    background:rgba(255,255,255,0.5);
+    border:1px dashed var(--line);
+    border-radius:16px;
+    min-width:250px;
+    max-width:250px;
+    display:flex;
+    flex-direction:column;
+    max-height:100%;
+  }
+  .column.drag-over{border-color:var(--clay);background:rgba(184,147,107,0.08);}
+  .col-header{
+    padding:12px 14px 10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .col-dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .col-title{font-family:'Fredoka',sans-serif;font-weight:600;font-size:13.5px;line-height:1.25;flex:1;}
+  .col-count{
+    font-size:11px;font-weight:700;color:var(--ink-soft);
+    background:var(--paper);border:1px solid var(--line);
+    border-radius:20px;padding:1px 8px;
+  }
+  .col-body{
+    flex:1;
+    padding:2px 10px 10px;
+    display:flex;flex-direction:column;gap:8px;
+    overflow-y:auto;
+    min-height:60px;
+  }
+  .col-empty{
+    font-size:12px;color:var(--ink-soft);
+    text-align:center;padding:18px 8px;
+    line-height:1.5;
+  }
+  .col-add{
+    margin:0 10px 12px;
+    border:1.5px dashed var(--line);
+    background:transparent;
+    border-radius:10px;
+    padding:8px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .col-add:hover{border-color:var(--clay);color:var(--clay-deep);}
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:11px 12px;
+    cursor:grab;
+    box-shadow:var(--shadow);
+    transition:transform .1s ease;
+  }
+  .card:active{cursor:grabbing;}
+  .card.dragging{opacity:0.4;}
+  .card-name{font-weight:700;font-size:13.5px;margin:0 0 4px;}
+  .card-meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;}
+  .chip{
+    font-size:10.5px;font-weight:600;
+    background:var(--cream);color:var(--ink-soft);
+    border-radius:20px;padding:2px 8px;
+    display:inline-flex;align-items:center;gap:3px;
+  }
+  .card-notes{font-size:11.5px;color:var(--ink-soft);line-height:1.4;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:absolute;inset:0;
+    background:rgba(43,33,24,0.45);
+    display:none;align-items:center;justify-content:center;
+    padding:20px; z-index:20;
+  }
+  .overlay.show{display:flex;}
+  .modal{
+    background:var(--paper);
+    border-radius:16px;
+    width:100%;max-width:420px;
+    max-height:88%;
+    overflow-y:auto;
+    padding:22px 22px 20px;
+    box-shadow:var(--shadow);
+  }
+  .modal-head{display:flex;align-items:center;justify-content:between;margin-bottom:16px;}
+  .modal-head h2{font-size:17px;margin:0;flex:1;}
+  .modal-close{background:none;border:none;cursor:pointer;color:var(--ink-soft);padding:4px;}
+  .modal-close:hover{color:var(--ink);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .btn-delete{background:transparent;color:var(--danger);border:1.5px solid #EFD3CC;flex:none;}
+  .btn-delete:hover{background:#FBEAE6;}
+  .confirm-box{
+    background:#FBEAE6;border-radius:10px;padding:12px;margin-top:10px;
+    font-size:12.5px;color:var(--danger);
+  }
+  .confirm-box .btn{margin-top:8px;padding:7px 12px;font-size:12.5px;}
+  .req{color:var(--rose);}
+  .toast{
+    position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; font-size:12.5px; font-weight:600;
+    padding:9px 16px; border-radius:20px; opacity:0; pointer-events:none;
+    transition:opacity .2s ease, bottom .2s ease; z-index:30;
+  }
+  .toast.show{opacity:1; bottom:26px;}
+
+  @media (max-width:520px){
+    .search-wrap input{width:140px;}
+    .brand-text span{display:none;}
+    .row2{grid-template-columns:1fr;}
+  }
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex; gap:18px; padding:0 20px; background:var(--paper); border-bottom:1px solid var(--line);}
+  .tab-btn{
+    background:transparent; border:none; cursor:pointer;
+    padding:12px 2px 10px; font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    color:var(--ink-soft); border-bottom:2px solid transparent;
+  }
+  .tab-btn:hover{color:var(--ink);}
+  .tab-btn.active{color:var(--clay-deep); border-bottom-color:var(--clay-deep);}
+
+  /* ---------- Financeiro ---------- */
+  .financeiro{flex:1; display:none; overflow-y:auto; padding:18px 20px 30px;}
+  .financeiro.active{display:block;}
+  .fin-summary{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px;}
+  .fin-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px; min-width:150px; flex:1; box-shadow:var(--shadow);
+  }
+  .fin-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); margin-bottom:5px;}
+  .fin-value{font-family:'Fredoka',sans-serif; font-size:18px; font-weight:600;}
+  .fin-value.pos{color:var(--sage);}
+  .fin-value.neg{color:var(--danger);}
+  .fin-sub{font-size:11px; color:var(--ink-soft); margin-top:2px;}
+  .fin-settle{
+    background:rgba(199,154,58,0.1); border:1px dashed var(--ochre); border-radius:14px;
+    padding:14px 16px; margin-bottom:26px; font-size:13.5px; line-height:1.6;
+  }
+  .fin-settle strong{color:var(--clay-deep);}
+  .fin-settle .fin-settle-ok{color:var(--sage); font-weight:600;}
+  .fin-section{margin-bottom:26px;}
+  .fin-section-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:10px;}
+  .fin-section-head h2{font-size:15px; margin:0;}
+  .fin-table-scroll{background:var(--paper); border:1px solid var(--line); border-radius:14px; overflow-x:auto;}
+  .fin-table{width:100%; border-collapse:collapse; font-size:13px; min-width:520px;}
+  .fin-table th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--ink-soft); padding:10px 12px; border-bottom:1px solid var(--line); background:var(--cream);
+    white-space:nowrap;
+  }
+  .fin-table td{padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:middle; white-space:nowrap;}
+  .fin-table tbody tr{cursor:pointer;}
+  .fin-table tbody tr:hover{background:var(--cream);}
+  .fin-table tbody tr:last-child td{border-bottom:none;}
+  .fin-amount{font-weight:700;}
+  .fin-empty{font-size:12.5px; color:var(--ink-soft); text-align:center; padding:20px 10px;}
+  .fin-split-preview{background:var(--cream); border-radius:10px; padding:10px 12px; font-size:12.5px; color:var(--ink-soft); margin:2px 0 4px; line-height:1.6;}
+</style>
+
+<div class="vfcrm" id="vfcrm">
+
+  <!-- LOGIN / SETUP GATE -->
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <div class="tag-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <h1 id="gateTitle">Vista Fuço · CRM</h1>
+      <p class="gate-sub" id="gateSub">Carregando...</p>
+
+      <div class="gate-error" id="gateError"></div>
+
+      <div id="gateFormLogin" style="display:none;">
+        <div class="field">
+          <label>Senha da equipe</label>
+          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="off">
+        </div>
+        <button class="btn btn-primary" id="loginBtn">Entrar</button>
+      </div>
+
+      <div id="gateFormSetup" style="display:none;">
+        <div class="field">
+          <label>Criar senha de acesso da equipe</label>
+          <input type="password" id="setupPass1" placeholder="Mínimo 4 caracteres" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Confirmar senha</label>
+          <input type="password" id="setupPass2" placeholder="Repita a senha" autocomplete="off">
+        </div>
+        <button class="btn btn-primary" id="setupBtn">Criar e entrar</button>
+        <div class="gate-switch">Essa senha é compartilhada por quem cuida do atendimento.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div class="app" id="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="tag-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="brand-text">
+          <h1>Vista Fuço · CRM</h1>
+          <span>seus fuçinhos, organizados</span>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="searchInput" placeholder="Buscar cliente ou pet...">
+      </div>
+      <button class="btn btn-small btn-add" id="addClientBtn">+ Novo cliente</button>
+      <button class="btn btn-small btn-logout" id="logoutBtn">Sair</button>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <button class="tab-btn active" data-tab="board">Quadro</button>
+      <button class="tab-btn" data-tab="financeiro">Financeiro</button>
+    </div>
+
+    <div class="board" id="board"><!-- columns injected by JS --></div>
+
+    <div class="financeiro" id="financeiro">
+      <div class="fin-summary" id="finSummary"><!-- cards injected by JS --></div>
+      <div class="fin-settle" id="finSettle"><!-- settlement text injected by JS --></div>
+
+      <div class="fin-section">
+        <div class="fin-section-head">
+          <h2>Pagamentos</h2>
+          <button class="btn btn-small btn-add" id="addPaymentBtn">+ Novo pagamento</button>
+        </div>
+        <div class="fin-table-scroll">
+          <table class="fin-table">
+            <thead>
+              <tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Investido por</th><th>Valor</th></tr>
+            </thead>
+            <tbody id="paymentsBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="fin-section">
+        <div class="fin-section-head">
+          <h2>Saques</h2>
+          <button class="btn btn-small btn-add" id="addWithdrawalBtn">+ Novo saque</button>
+        </div>
+        <div class="fin-table-scroll">
+          <table class="fin-table">
+            <thead>
+              <tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Divisão</th></tr>
+            </thead>
+            <tbody id="withdrawalsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="modalTitle">Novo cliente</h2>
+        <button class="modal-close" id="modalClose">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="field">
+        <label>Nome do cliente <span class="req">*</span></label>
+        <input type="text" id="fNome" placeholder="Ex: Marina Alves">
+      </div>
+      <div class="field">
+        <label>Etapa</label>
+        <select id="fEtapa"></select>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Nome do pet</label>
+          <input type="text" id="fPet" placeholder="Ex: Fubá">
+        </div>
+        <div class="field">
+          <label>Contato / WhatsApp</label>
+          <input type="text" id="fContato" placeholder="(31) 9....">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Data da 1ª mensagem</label>
+          <input type="date" id="fData1">
+        </div>
+        <div class="field">
+          <label>Data da compra</label>
+          <input type="date" id="fDataCompra">
+        </div>
+      </div>
+      <div class="field">
+        <label>Observações</label>
+        <textarea id="fObs" rows="3" placeholder="Preferências, tamanho, estampa favorita..."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-delete" id="deleteBtn" style="display:none;">Excluir</button>
+        <button class="btn btn-primary" id="saveBtn">Salvar</button>
+      </div>
+      <div class="confirm-box" id="confirmDelete" style="display:none;">
+        Excluir este cliente permanentemente? Essa ação não pode ser desfeita.
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-delete" id="confirmDeleteYes">Sim, excluir</button>
+          <button class="btn btn-ghost" id="confirmDeleteNo">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT MODAL -->
+  <div class="overlay" id="paymentOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="paymentModalTitle">Novo pagamento</h2>
+        <button class="modal-close" id="paymentModalClose">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Data <span class="req">*</span></label>
+          <input type="date" id="pData">
+        </div>
+        <div class="field">
+          <label>Valor <span class="req">*</span></label>
+          <input type="text" id="pValor" placeholder="Ex: 159,90" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field">
+        <label>Descrição <span class="req">*</span></label>
+        <input type="text" id="pDescricao" placeholder="Ex: Assinatura reserva">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Categoria</label>
+          <input type="text" id="pCategoria" list="categoriaList" placeholder="Ex: Divulgação">
+          <datalist id="categoriaList"></datalist>
+        </div>
+        <div class="field">
+          <label>Investido por <span class="req">*</span></label>
+          <select id="pInvestidoPor"></select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-delete" id="paymentDeleteBtn" style="display:none;">Excluir</button>
+        <button class="btn btn-primary" id="paymentSaveBtn">Salvar</button>
+      </div>
+      <div class="confirm-box" id="paymentConfirmDelete" style="display:none;">
+        Excluir este pagamento permanentemente? Essa ação não pode ser desfeita.
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-delete" id="paymentConfirmDeleteYes">Sim, excluir</button>
+          <button class="btn btn-ghost" id="paymentConfirmDeleteNo">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WITHDRAWAL MODAL -->
+  <div class="overlay" id="withdrawalOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="withdrawalModalTitle">Novo saque</h2>
+        <button class="modal-close" id="withdrawalModalClose">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Data <span class="req">*</span></label>
+          <input type="date" id="wData">
+        </div>
+        <div class="field">
+          <label>Valor total <span class="req">*</span></label>
+          <input type="text" id="wValor" placeholder="Ex: 227,00" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field">
+        <label>Descrição</label>
+        <input type="text" id="wDescricao" placeholder="Opcional">
+      </div>
+      <div class="fin-split-preview" id="wSplitPreview"></div>
+
+      <div class="modal-actions">
+        <button class="btn btn-delete" id="withdrawalDeleteBtn" style="display:none;">Excluir</button>
+        <button class="btn btn-primary" id="withdrawalSaveBtn">Salvar</button>
+      </div>
+      <div class="confirm-box" id="withdrawalConfirmDelete" style="display:none;">
+        Excluir este saque permanentemente? Essa ação não pode ser desfeita.
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-delete" id="withdrawalConfirmDeleteYes">Sim, excluir</button>
+          <button class="btn btn-ghost" id="withdrawalConfirmDeleteNo">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  // Ver supabase-setup.sql para criar as tabelas/policies antes de usar.
+  const SUPABASE_URL = 'https://xqpqxwsxtqxgzzrjdzjz.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhxcHF4d3N4dHF4Z3p6cmpkemp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4NTAwODIsImV4cCI6MjA5OTQyNjA4Mn0.lDpWLTLIaoFz4kFANuJ-5rTX6D9p6Dc1RxhmjK9dBGQ';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const STAGES = [
+    { id:'potenciais',   label:'Potenciais clientes',        color:'var(--rose)'  },
+    { id:'responderam',  label:'Responderam',                 color:'var(--ochre)' },
+    { id:'conversa',     label:'Em conversa',                 color:'var(--blue)'  },
+    { id:'comprou',      label:'Compraram',                   color:'var(--sage)'  },
+    { id:'recompra',     label:'Recompra',                    color:'var(--plum)'  },
+  ];
+
+  // Sócias que dividem custos/saques da empresa. Ajuste os nomes aqui se precisar.
+  const PARTNERS = ['Mariane', 'Isabela'];
+  const CATEGORIES = ['Assinatura', 'Divulgação', 'Frete', 'Embalagem', 'Material', 'Outros'];
+
+  let clients = [];
+  let editingId = null;
+  let draggedId = null;
+
+  let payments = [];
+  let withdrawals = [];
+  let editingPaymentId = null;
+  let editingWithdrawalId = null;
+
+  const $ = (id) => document.getElementById(id);
+  const root = $('vfcrm');
+
+  function toast(msg){
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+
+  function fmtDate(iso){
+    if(!iso) return '';
+    const [y,m,d] = iso.split('-');
+    return d+'/'+m+'/'+y;
+  }
+
+  function uid(prefix){
+    return (prefix||'c') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+  }
+
+  function fmtBRL(n){
+    return (n||0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+  }
+
+  function parseCurrency(str){
+    if(str == null) return NaN;
+    let s = String(str).trim().replace(/[^\d.,-]/g, '');
+    if(s === '') return NaN;
+    if(s.includes(',')){
+      s = s.replace(/\./g, '').replace(',', '.');
+    }
+    return parseFloat(s);
+  }
+
+  /* ---------------- Storage (Supabase) ---------------- */
+  function rowToClient(r){
+    return {
+      id: r.id,
+      nome: r.nome,
+      stage: r.stage,
+      pet: r.pet || '',
+      contato: r.contato || '',
+      data1: r.data1 || '',
+      dataCompra: r.data_compra || '',
+      obs: r.obs || '',
+      createdAt: r.created_at ? new Date(r.created_at).getTime() : Date.now(),
+      updatedAt: r.updated_at ? new Date(r.updated_at).getTime() : Date.now(),
+    };
+  }
+
+  async function loadClients(){
+    const { data, error } = await sb.from('clients').select('*');
+    if(error){
+      clients = [];
+      toast('Não foi possível carregar os clientes.');
+      return;
+    }
+    clients = (data || []).map(rowToClient);
+  }
+  async function getConfig(){
+    const { data, error } = await sb.from('crm_config').select('passcode').eq('id', 1).maybeSingle();
+    if(error || !data) return null;
+    return { passcode: data.passcode };
+  }
+  async function setConfig(cfg){
+    const { error } = await sb.from('crm_config').upsert({ id: 1, passcode: cfg.passcode });
+    if(error) toast('Não foi possível salvar a senha agora.');
+  }
+
+  /* ---------------- Financeiro: storage ---------------- */
+  function rowToPayment(r){
+    return {
+      id: r.id,
+      data: r.data || '',
+      valor: Number(r.valor) || 0,
+      descricao: r.descricao || '',
+      categoria: r.categoria || '',
+      investidoPor: r.investido_por || '',
+      updatedAt: r.updated_at ? new Date(r.updated_at).getTime() : Date.now(),
+    };
+  }
+  function rowToWithdrawal(r){
+    return {
+      id: r.id,
+      data: r.data || '',
+      valor: Number(r.valor) || 0,
+      descricao: r.descricao || '',
+    };
+  }
+
+  async function loadPayments(){
+    const { data, error } = await sb.from('payments').select('*').order('data', { ascending:false });
+    if(error){ payments = []; toast('Não foi possível carregar os pagamentos.'); return; }
+    payments = (data || []).map(rowToPayment);
+  }
+  async function loadWithdrawals(){
+    const { data, error } = await sb.from('withdrawals').select('*').order('data', { ascending:false });
+    if(error){ withdrawals = []; toast('Não foi possível carregar os saques.'); return; }
+    withdrawals = (data || []).map(rowToWithdrawal);
+  }
+
+  /* ---------------- Gate ---------------- */
+  async function initGate(){
+    const cfg = await getConfig();
+    const err = $('gateError');
+    err.classList.remove('show');
+
+    if(cfg && cfg.passcode){
+      $('gateSub').textContent = 'Digite a senha da equipe para acessar o painel.';
+      $('gateFormLogin').style.display = 'block';
+      $('gateFormSetup').style.display = 'none';
+    } else {
+      $('gateSub').textContent = 'Primeiro acesso: crie a senha que sua equipe vai usar para entrar.';
+      $('gateFormLogin').style.display = 'none';
+      $('gateFormSetup').style.display = 'block';
+    }
+  }
+
+  $('loginBtn').addEventListener('click', async ()=>{
+    const cfg = await getConfig();
+    const val = $('loginPass').value;
+    const err = $('gateError');
+    if(cfg && val === cfg.passcode){
+      enterApp();
+    } else {
+      err.textContent = 'Senha incorreta. Tente novamente.';
+      err.classList.add('show');
+      const card = document.querySelector('.gate-card');
+      card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+    }
+  });
+  $('loginPass').addEventListener('keydown', (e)=>{ if(e.key==='Enter') $('loginBtn').click(); });
+
+  $('setupBtn').addEventListener('click', async ()=>{
+    const p1 = $('setupPass1').value;
+    const p2 = $('setupPass2').value;
+    const err = $('gateError');
+    if(p1.length < 4){
+      err.textContent = 'Use pelo menos 4 caracteres.';
+      err.classList.add('show'); return;
+    }
+    if(p1 !== p2){
+      err.textContent = 'As senhas não coincidem.';
+      err.classList.add('show'); return;
+    }
+    await setConfig({ passcode: p1 });
+    enterApp();
+  });
+
+  function enterApp(){
+    $('gate').style.display = 'none';
+    $('app').classList.add('active');
+    renderBoard();
+    renderFinanceiro();
+  }
+
+  $('logoutBtn').addEventListener('click', ()=>{
+    $('app').classList.remove('active');
+    $('gate').style.display = 'flex';
+    $('loginPass').value = '';
+    initGate();
+  });
+
+  /* ---------------- Tabs ---------------- */
+  $('tabs').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tab-btn');
+    if(!btn) return;
+    document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b===btn));
+    const isFinanceiro = btn.dataset.tab === 'financeiro';
+    $('financeiro').classList.toggle('active', isFinanceiro);
+    $('board').style.display = isFinanceiro ? 'none' : 'flex';
+    $('searchInput').parentElement.style.display = isFinanceiro ? 'none' : '';
+    $('addClientBtn').style.display = isFinanceiro ? 'none' : '';
+  });
+
+  /* ---------------- Board rendering ---------------- */
+  function buildBoardSkeleton(){
+    const board = $('board');
+    board.innerHTML = '';
+    STAGES.forEach(stage=>{
+      const col = document.createElement('div');
+      col.className = 'column';
+      col.dataset.stage = stage.id;
+      col.innerHTML = `
+        <div class="col-header">
+          <span class="col-dot" style="background:${stage.color}"></span>
+          <span class="col-title">${stage.label}</span>
+          <span class="col-count" data-count="${stage.id}">0</span>
+        </div>
+        <div class="col-body" data-body="${stage.id}"></div>
+        <button class="col-add" data-add="${stage.id}">+ Adicionar aqui</button>
+      `;
+      board.appendChild(col);
+
+      col.addEventListener('dragover', (e)=>{ e.preventDefault(); col.classList.add('drag-over'); });
+      col.addEventListener('dragleave', ()=> col.classList.remove('drag-over'));
+      col.addEventListener('drop', async (e)=>{
+        e.preventDefault();
+        col.classList.remove('drag-over');
+        if(!draggedId) return;
+        const c = clients.find(x=>x.id===draggedId);
+        if(c && c.stage !== stage.id){
+          const prevStage = c.stage;
+          c.stage = stage.id;
+          c.updatedAt = Date.now();
+          const { error } = await sb.from('clients')
+            .update({ stage: stage.id, updated_at: new Date().toISOString() })
+            .eq('id', c.id);
+          if(error){
+            c.stage = prevStage;
+            toast('Não foi possível mover agora.');
+            return;
+          }
+          renderBoard();
+          toast('Cliente movido para "'+stage.label+'"');
+        }
+      });
+    });
+
+    board.querySelectorAll('[data-add]').forEach(btn=>{
+      btn.addEventListener('click', ()=> openModal(null, btn.dataset.add));
+    });
+  }
+
+  function renderBoard(filter){
+    const q = (filter||'').trim().toLowerCase();
+    STAGES.forEach(stage=>{
+      const body = document.querySelector(`[data-body="${stage.id}"]`);
+      const count = document.querySelector(`[data-count="${stage.id}"]`);
+      let list = clients.filter(c=>c.stage===stage.id);
+      if(q){
+        list = list.filter(c =>
+          (c.nome||'').toLowerCase().includes(q) ||
+          (c.pet||'').toLowerCase().includes(q) ||
+          (c.contato||'').toLowerCase().includes(q)
+        );
+      }
+      count.textContent = list.length;
+      body.innerHTML = '';
+      if(list.length === 0){
+        body.innerHTML = `<div class="col-empty">Nenhum cliente aqui ainda.</div>`;
+        return;
+      }
+      list.sort((a,b)=> (b.updatedAt||0) - (a.updatedAt||0));
+      list.forEach(c=>{
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.draggable = true;
+        card.dataset.id = c.id;
+        let chips = '';
+        if(c.pet) chips += `<span class="chip">🐾 ${escapeHtml(c.pet)}</span>`;
+        if(c.data1) chips += `<span class="chip">1ª msg ${fmtDate(c.data1)}</span>`;
+        if(c.dataCompra) chips += `<span class="chip">compra ${fmtDate(c.dataCompra)}</span>`;
+        card.innerHTML = `
+          <p class="card-name">${escapeHtml(c.nome)}</p>
+          <div class="card-meta">${chips}</div>
+          ${c.obs ? `<p class="card-notes">${escapeHtml(c.obs)}</p>` : ''}
+        `;
+        card.addEventListener('click', ()=> openModal(c.id));
+        card.addEventListener('dragstart', ()=>{
+          draggedId = c.id;
+          card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
+        body.appendChild(card);
+      });
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  $('searchInput').addEventListener('input', (e)=> renderBoard(e.target.value));
+
+  /* ---------------- Modal ---------------- */
+  function populateStageSelect(){
+    const sel = $('fEtapa');
+    sel.innerHTML = STAGES.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
+  }
+
+  function openModal(id, presetStage){
+    editingId = id || null;
+    $('confirmDelete').style.display = 'none';
+    populateStageSelect();
+
+    if(id){
+      const c = clients.find(x=>x.id===id);
+      $('modalTitle').textContent = 'Editar cliente';
+      $('fNome').value = c.nome || '';
+      $('fEtapa').value = c.stage;
+      $('fPet').value = c.pet || '';
+      $('fContato').value = c.contato || '';
+      $('fData1').value = c.data1 || '';
+      $('fDataCompra').value = c.dataCompra || '';
+      $('fObs').value = c.obs || '';
+      $('deleteBtn').style.display = 'inline-flex';
+    } else {
+      $('modalTitle').textContent = 'Novo cliente';
+      $('fNome').value = '';
+      $('fEtapa').value = presetStage || STAGES[0].id;
+      $('fPet').value = '';
+      $('fContato').value = '';
+      $('fData1').value = '';
+      $('fDataCompra').value = '';
+      $('fObs').value = '';
+      $('deleteBtn').style.display = 'none';
+    }
+    $('overlay').classList.add('show');
+    setTimeout(()=>$('fNome').focus(), 50);
+  }
+
+  function closeModal(){
+    $('overlay').classList.remove('show');
+    editingId = null;
+  }
+  $('modalClose').addEventListener('click', closeModal);
+  $('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
+
+  $('saveBtn').addEventListener('click', async ()=>{
+    const nome = $('fNome').value.trim();
+    if(!nome){
+      $('fNome').style.borderColor = 'var(--danger)';
+      $('fNome').focus();
+      return;
+    }
+    const payload = {
+      nome,
+      stage: $('fEtapa').value,
+      pet: $('fPet').value.trim(),
+      contato: $('fContato').value.trim(),
+      data1: $('fData1').value || null,
+      data_compra: $('fDataCompra').value || null,
+      obs: $('fObs').value.trim(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if(editingId){
+      const { error } = await sb.from('clients').update(payload).eq('id', editingId);
+      if(error){ toast('Não foi possível salvar agora.'); return; }
+      const c = clients.find(x=>x.id===editingId);
+      Object.assign(c, {
+        nome: payload.nome, stage: payload.stage, pet: payload.pet,
+        contato: payload.contato, data1: payload.data1 || '', dataCompra: payload.data_compra || '',
+        obs: payload.obs, updatedAt: Date.now(),
+      });
+      toast('Cliente atualizado');
+    } else {
+      const id = uid();
+      const { error } = await sb.from('clients').insert({ id, ...payload, created_at: new Date().toISOString() });
+      if(error){ toast('Não foi possível adicionar agora.'); return; }
+      clients.push({
+        id, nome: payload.nome, stage: payload.stage, pet: payload.pet,
+        contato: payload.contato, data1: payload.data1 || '', dataCompra: payload.data_compra || '',
+        obs: payload.obs, createdAt: Date.now(), updatedAt: Date.now(),
+      });
+      toast('Cliente adicionado');
+    }
+    closeModal();
+    renderBoard($('searchInput').value);
+  });
+
+  $('fNome').addEventListener('input', ()=> $('fNome').style.borderColor = '');
+
+  $('deleteBtn').addEventListener('click', ()=>{
+    $('confirmDelete').style.display = 'block';
+  });
+  $('confirmDeleteNo').addEventListener('click', ()=> $('confirmDelete').style.display = 'none');
+  $('confirmDeleteYes').addEventListener('click', async ()=>{
+    const { error } = await sb.from('clients').delete().eq('id', editingId);
+    if(error){ toast('Não foi possível excluir agora.'); return; }
+    clients = clients.filter(x=>x.id!==editingId);
+    closeModal();
+    renderBoard($('searchInput').value);
+    toast('Cliente excluído');
+  });
+
+  $('addClientBtn').addEventListener('click', ()=> openModal(null));
+
+  /* ---------------- Financeiro: cálculo ---------------- */
+  function computeBalances(){
+    const total = payments.reduce((s,p)=> s + p.valor, 0);
+    const n = PARTNERS.length || 1;
+    const fairShare = total / n;
+    const invested = {};
+    PARTNERS.forEach(name=> invested[name] = 0);
+    payments.forEach(p=>{
+      if(!(p.investidoPor in invested)) invested[p.investidoPor] = 0;
+      invested[p.investidoPor] += p.valor;
+    });
+    const balance = {};
+    Object.keys(invested).forEach(name=>{ balance[name] = invested[name] - fairShare; });
+    return { total, fairShare, invested, balance };
+  }
+
+  function computeSettlements(balance){
+    const creditors = [];
+    const debtors = [];
+    Object.entries(balance).forEach(([name, bal])=>{
+      if(bal > 0.005) creditors.push({ name, amount: bal });
+      else if(bal < -0.005) debtors.push({ name, amount: -bal });
+    });
+    creditors.sort((a,b)=> b.amount - a.amount);
+    debtors.sort((a,b)=> b.amount - a.amount);
+    const transfers = [];
+    let i = 0, j = 0;
+    while(i < debtors.length && j < creditors.length){
+      const pay = Math.min(debtors[i].amount, creditors[j].amount);
+      transfers.push({ from: debtors[i].name, to: creditors[j].name, amount: pay });
+      debtors[i].amount -= pay;
+      creditors[j].amount -= pay;
+      if(debtors[i].amount < 0.005) i++;
+      if(creditors[j].amount < 0.005) j++;
+    }
+    return transfers;
+  }
+
+  /* ---------------- Financeiro: render ---------------- */
+  function renderFinanceiro(){
+    renderFinSummary();
+    renderPaymentsTable();
+    renderWithdrawalsTable();
+  }
+
+  function renderFinSummary(){
+    const { total, fairShare, invested, balance } = computeBalances();
+    const totalSacado = withdrawals.reduce((s,w)=> s + w.valor, 0);
+    const shareSacado = totalSacado / (PARTNERS.length || 1);
+
+    let cards = `
+      <div class="fin-card">
+        <div class="fin-label">Total gasto</div>
+        <div class="fin-value">${fmtBRL(total)}</div>
+        <div class="fin-sub">Cota justa por sócia: ${fmtBRL(fairShare)}</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-label">Total sacado</div>
+        <div class="fin-value">${fmtBRL(totalSacado)}</div>
+        <div class="fin-sub">${fmtBRL(shareSacado)} por sócia</div>
+      </div>
+    `;
+    PARTNERS.forEach(name=>{
+      const bal = balance[name] || 0;
+      const cls = bal > 0.005 ? 'pos' : (bal < -0.005 ? 'neg' : '');
+      const subText = bal > 0.005 ? 'a receber dos custos' : (bal < -0.005 ? 'a pagar dos custos' : 'em dia');
+      cards += `
+        <div class="fin-card">
+          <div class="fin-label">${escapeHtml(name)}</div>
+          <div class="fin-value">${fmtBRL(invested[name]||0)}</div>
+          <div class="fin-sub ${cls}" style="font-weight:600;">${fmtBRL(Math.abs(bal))} ${subText}</div>
+        </div>
+      `;
+    });
+    $('finSummary').innerHTML = cards;
+
+    const transfers = computeSettlements(balance);
+    const settleEl = $('finSettle');
+    if(payments.length === 0){
+      settleEl.innerHTML = 'Nenhum pagamento lançado ainda.';
+    } else if(transfers.length === 0){
+      settleEl.innerHTML = '<span class="fin-settle-ok">Contas equilibradas — ninguém deve nada no momento.</span>';
+    } else {
+      settleEl.innerHTML = transfers.map(t=>
+        `<div><strong>${escapeHtml(t.from)}</strong> deve pagar <strong>${fmtBRL(t.amount)}</strong> para <strong>${escapeHtml(t.to)}</strong></div>`
+      ).join('');
+    }
+  }
+
+  function renderPaymentsTable(){
+    const body = $('paymentsBody');
+    if(payments.length === 0){
+      body.innerHTML = `<tr><td colspan="5" class="fin-empty">Nenhum pagamento registrado ainda.</td></tr>`;
+      return;
+    }
+    const sorted = [...payments].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
+    body.innerHTML = sorted.map(p => `
+      <tr data-id="${p.id}">
+        <td>${fmtDate(p.data)}</td>
+        <td>${escapeHtml(p.descricao)}</td>
+        <td>${escapeHtml(p.categoria || '—')}</td>
+        <td>${escapeHtml(p.investidoPor)}</td>
+        <td class="fin-amount">${fmtBRL(p.valor)}</td>
+      </tr>
+    `).join('');
+    body.querySelectorAll('tr[data-id]').forEach(tr=>{
+      tr.addEventListener('click', ()=> openPaymentModal(tr.dataset.id));
+    });
+  }
+
+  function renderWithdrawalsTable(){
+    const body = $('withdrawalsBody');
+    if(withdrawals.length === 0){
+      body.innerHTML = `<tr><td colspan="4" class="fin-empty">Nenhum saque registrado ainda.</td></tr>`;
+      return;
+    }
+    const n = PARTNERS.length || 1;
+    const sorted = [...withdrawals].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
+    body.innerHTML = sorted.map(w => `
+      <tr data-id="${w.id}">
+        <td>${fmtDate(w.data)}</td>
+        <td>${escapeHtml(w.descricao || '—')}</td>
+        <td class="fin-amount">${fmtBRL(w.valor)}</td>
+        <td>${fmtBRL(w.valor / n)} cada</td>
+      </tr>
+    `).join('');
+    body.querySelectorAll('tr[data-id]').forEach(tr=>{
+      tr.addEventListener('click', ()=> openWithdrawalModal(tr.dataset.id));
+    });
+  }
+
+  /* ---------------- Financeiro: modal pagamento ---------------- */
+  function populateFinanceiroSelects(){
+    $('pInvestidoPor').innerHTML = PARTNERS.map(name=>`<option value="${name}">${name}</option>`).join('');
+    $('categoriaList').innerHTML = CATEGORIES.map(c=>`<option value="${c}"></option>`).join('');
+  }
+
+  function openPaymentModal(id){
+    editingPaymentId = id || null;
+    $('paymentConfirmDelete').style.display = 'none';
+    populateFinanceiroSelects();
+
+    if(id){
+      const p = payments.find(x=>x.id===id);
+      $('paymentModalTitle').textContent = 'Editar pagamento';
+      $('pData').value = p.data || '';
+      $('pValor').value = p.valor ? String(p.valor).replace('.', ',') : '';
+      $('pDescricao').value = p.descricao || '';
+      $('pCategoria').value = p.categoria || '';
+      $('pInvestidoPor').value = p.investidoPor || PARTNERS[0];
+      $('paymentDeleteBtn').style.display = 'inline-flex';
+    } else {
+      $('paymentModalTitle').textContent = 'Novo pagamento';
+      $('pData').value = '';
+      $('pValor').value = '';
+      $('pDescricao').value = '';
+      $('pCategoria').value = '';
+      $('pInvestidoPor').value = PARTNERS[0];
+      $('paymentDeleteBtn').style.display = 'none';
+    }
+    $('paymentOverlay').classList.add('show');
+    setTimeout(()=>$('pData').focus(), 50);
+  }
+
+  function closePaymentModal(){
+    $('paymentOverlay').classList.remove('show');
+    editingPaymentId = null;
+  }
+  $('paymentModalClose').addEventListener('click', closePaymentModal);
+  $('paymentOverlay').addEventListener('click', (e)=>{ if(e.target.id==='paymentOverlay') closePaymentModal(); });
+
+  $('paymentSaveBtn').addEventListener('click', async ()=>{
+    const data = $('pData').value;
+    const valor = parseCurrency($('pValor').value);
+    const descricao = $('pDescricao').value.trim();
+    if(!data || !descricao || isNaN(valor) || valor <= 0){
+      toast('Preencha data, descrição e um valor válido.');
+      return;
+    }
+    const payload = {
+      data,
+      valor,
+      descricao,
+      categoria: $('pCategoria').value.trim(),
+      investido_por: $('pInvestidoPor').value,
+      updated_at: new Date().toISOString(),
+    };
+
+    if(editingPaymentId){
+      const { error } = await sb.from('payments').update(payload).eq('id', editingPaymentId);
+      if(error){ toast('Não foi possível salvar agora.'); return; }
+      const p = payments.find(x=>x.id===editingPaymentId);
+      Object.assign(p, { data, valor, descricao, categoria: payload.categoria, investidoPor: payload.investido_por, updatedAt: Date.now() });
+      toast('Pagamento atualizado');
+    } else {
+      const id = uid('p');
+      const { error } = await sb.from('payments').insert({ id, ...payload, created_at: new Date().toISOString() });
+      if(error){ toast('Não foi possível adicionar agora.'); return; }
+      payments.push({ id, data, valor, descricao, categoria: payload.categoria, investidoPor: payload.investido_por, updatedAt: Date.now() });
+      toast('Pagamento adicionado');
+    }
+    closePaymentModal();
+    renderFinanceiro();
+  });
+
+  $('paymentDeleteBtn').addEventListener('click', ()=>{
+    $('paymentConfirmDelete').style.display = 'block';
+  });
+  $('paymentConfirmDeleteNo').addEventListener('click', ()=> $('paymentConfirmDelete').style.display = 'none');
+  $('paymentConfirmDeleteYes').addEventListener('click', async ()=>{
+    const { error } = await sb.from('payments').delete().eq('id', editingPaymentId);
+    if(error){ toast('Não foi possível excluir agora.'); return; }
+    payments = payments.filter(x=>x.id!==editingPaymentId);
+    closePaymentModal();
+    renderFinanceiro();
+    toast('Pagamento excluído');
+  });
+
+  $('addPaymentBtn').addEventListener('click', ()=> openPaymentModal(null));
+
+  /* ---------------- Financeiro: modal saque ---------------- */
+  function updateSplitPreview(){
+    const valor = parseCurrency($('wValor').value);
+    const n = PARTNERS.length || 1;
+    if(isNaN(valor) || valor <= 0){
+      $('wSplitPreview').textContent = '';
+      return;
+    }
+    const each = valor / n;
+    $('wSplitPreview').textContent = PARTNERS.map(name=> `${name}: ${fmtBRL(each)}`).join(' · ');
+  }
+  $('wValor').addEventListener('input', updateSplitPreview);
+
+  function openWithdrawalModal(id){
+    editingWithdrawalId = id || null;
+    $('withdrawalConfirmDelete').style.display = 'none';
+
+    if(id){
+      const w = withdrawals.find(x=>x.id===id);
+      $('withdrawalModalTitle').textContent = 'Editar saque';
+      $('wData').value = w.data || '';
+      $('wValor').value = w.valor ? String(w.valor).replace('.', ',') : '';
+      $('wDescricao').value = w.descricao || '';
+      $('withdrawalDeleteBtn').style.display = 'inline-flex';
+    } else {
+      $('withdrawalModalTitle').textContent = 'Novo saque';
+      $('wData').value = '';
+      $('wValor').value = '';
+      $('wDescricao').value = '';
+      $('withdrawalDeleteBtn').style.display = 'none';
+    }
+    updateSplitPreview();
+    $('withdrawalOverlay').classList.add('show');
+    setTimeout(()=>$('wData').focus(), 50);
+  }
+
+  function closeWithdrawalModal(){
+    $('withdrawalOverlay').classList.remove('show');
+    editingWithdrawalId = null;
+  }
+  $('withdrawalModalClose').addEventListener('click', closeWithdrawalModal);
+  $('withdrawalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='withdrawalOverlay') closeWithdrawalModal(); });
+
+  $('withdrawalSaveBtn').addEventListener('click', async ()=>{
+    const data = $('wData').value;
+    const valor = parseCurrency($('wValor').value);
+    if(!data || isNaN(valor) || valor <= 0){
+      toast('Preencha data e um valor válido.');
+      return;
+    }
+    const payload = {
+      data,
+      valor,
+      descricao: $('wDescricao').value.trim(),
+    };
+
+    if(editingWithdrawalId){
+      const { error } = await sb.from('withdrawals').update(payload).eq('id', editingWithdrawalId);
+      if(error){ toast('Não foi possível salvar agora.'); return; }
+      const w = withdrawals.find(x=>x.id===editingWithdrawalId);
+      Object.assign(w, payload);
+      toast('Saque atualizado');
+    } else {
+      const id = uid('w');
+      const { error } = await sb.from('withdrawals').insert({ id, ...payload, created_at: new Date().toISOString() });
+      if(error){ toast('Não foi possível adicionar agora.'); return; }
+      withdrawals.push({ id, ...payload });
+      toast('Saque adicionado');
+    }
+    closeWithdrawalModal();
+    renderFinanceiro();
+  });
+
+  $('withdrawalDeleteBtn').addEventListener('click', ()=>{
+    $('withdrawalConfirmDelete').style.display = 'block';
+  });
+  $('withdrawalConfirmDeleteNo').addEventListener('click', ()=> $('withdrawalConfirmDelete').style.display = 'none');
+  $('withdrawalConfirmDeleteYes').addEventListener('click', async ()=>{
+    const { error } = await sb.from('withdrawals').delete().eq('id', editingWithdrawalId);
+    if(error){ toast('Não foi possível excluir agora.'); return; }
+    withdrawals = withdrawals.filter(x=>x.id!==editingWithdrawalId);
+    closeWithdrawalModal();
+    renderFinanceiro();
+    toast('Saque excluído');
+  });
+
+  $('addWithdrawalBtn').addEventListener('click', ()=> openWithdrawalModal(null));
+
+  /* ---------------- Init ---------------- */
+  async function init(){
+    buildBoardSkeleton();
+    await loadClients();
+    await loadPayments();
+    await loadWithdrawals();
+    await initGate();
+  }
+  init();
+})();
+</script>
