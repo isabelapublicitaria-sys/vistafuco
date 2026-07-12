@@ -15,7 +15,9 @@
 -- individual). Se um dia precisar de contas separadas por pessoa, o
 -- caminho é migrar para Supabase Auth de verdade.
 
-create extension if not exists pgcrypto;
+-- No Supabase o pgcrypto normalmente fica no schema "extensions", por isso
+-- toda função abaixo inclui esse schema no search_path.
+create extension if not exists pgcrypto with schema extensions;
 
 -- Se você já rodou uma versão antiga deste script (com policy "anon full
 -- access"), isto substitui a config antiga por uma versão com hash.
@@ -81,7 +83,7 @@ create or replace function crm_is_configured()
 returns boolean
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select exists(select 1 from crm_config where id = 1);
 $$;
@@ -90,7 +92,7 @@ create or replace function crm_setup_passcode(new_passcode text)
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   if exists(select 1 from crm_config where id = 1) then
@@ -108,7 +110,7 @@ create or replace function crm_check_passcode(passcode text)
 returns boolean
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select coalesce(
     (select passcode_hash = crypt(passcode, passcode_hash) from crm_config where id = 1),
@@ -121,7 +123,7 @@ create or replace function crm_assert_passcode(passcode text)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   if not crm_check_passcode(passcode) then
@@ -136,7 +138,7 @@ create or replace function crm_list_clients(passcode text)
 returns setof clients
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   perform crm_assert_passcode(passcode);
@@ -151,7 +153,7 @@ create or replace function crm_upsert_client(
 returns clients
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   result clients;
@@ -172,7 +174,7 @@ create or replace function crm_update_client_stage(passcode text, p_id text, p_s
 returns clients
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   result clients;
@@ -187,7 +189,7 @@ create or replace function crm_delete_client(passcode text, p_id text)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   perform crm_assert_passcode(passcode);
@@ -201,7 +203,7 @@ create or replace function crm_list_payments(passcode text)
 returns setof payments
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   perform crm_assert_passcode(passcode);
@@ -216,7 +218,7 @@ create or replace function crm_upsert_payment(
 returns payments
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   result payments;
@@ -236,7 +238,7 @@ create or replace function crm_delete_payment(passcode text, p_id text)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   perform crm_assert_passcode(passcode);
@@ -250,7 +252,7 @@ create or replace function crm_list_withdrawals(passcode text)
 returns setof withdrawals
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   perform crm_assert_passcode(passcode);
@@ -264,7 +266,7 @@ create or replace function crm_upsert_withdrawal(
 returns withdrawals
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   result withdrawals;
@@ -283,7 +285,7 @@ create or replace function crm_delete_withdrawal(passcode text, p_id text)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   perform crm_assert_passcode(passcode);
