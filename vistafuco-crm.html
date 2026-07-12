@@ -608,6 +608,8 @@
   let editingPaymentId = null;
   let editingWithdrawalId = null;
 
+  let authPasscode = null;
+
   const $ = (id) => document.getElementById(id);
   const root = $('vfcrm');
 
@@ -659,7 +661,7 @@
   }
 
   async function loadClients(){
-    const { data, error } = await sb.from('clients').select('*');
+    const { data, error } = await sb.rpc('crm_list_clients', { passcode: authPasscode });
     if(error){
       clients = [];
       toast('Não foi possível carregar os clientes.');
@@ -667,14 +669,20 @@
     }
     clients = (data || []).map(rowToClient);
   }
-  async function getConfig(){
-    const { data, error } = await sb.from('crm_config').select('passcode').eq('id', 1).maybeSingle();
-    if(error || !data) return null;
-    return { passcode: data.passcode };
+  async function crmIsConfigured(){
+    const { data, error } = await sb.rpc('crm_is_configured');
+    if(error) return false;
+    return !!data;
   }
-  async function setConfig(cfg){
-    const { error } = await sb.from('crm_config').upsert({ id: 1, passcode: cfg.passcode });
-    if(error) toast('Não foi possível salvar a senha agora.');
+  async function crmCheckPasscode(passcode){
+    const { data, error } = await sb.rpc('crm_check_passcode', { passcode });
+    if(error) return false;
+    return !!data;
+  }
+  async function crmSetupPasscode(passcode){
+    const { data, error } = await sb.rpc('crm_setup_passcode', { new_passcode: passcode });
+    if(error) return false;
+    return !!data;
   }
 
   /* ---------------- Financeiro: storage ---------------- */
@@ -699,23 +707,23 @@
   }
 
   async function loadPayments(){
-    const { data, error } = await sb.from('payments').select('*').order('data', { ascending:false });
+    const { data, error } = await sb.rpc('crm_list_payments', { passcode: authPasscode });
     if(error){ payments = []; toast('Não foi possível carregar os pagamentos.'); return; }
     payments = (data || []).map(rowToPayment);
   }
   async function loadWithdrawals(){
-    const { data, error } = await sb.from('withdrawals').select('*').order('data', { ascending:false });
+    const { data, error } = await sb.rpc('crm_list_withdrawals', { passcode: authPasscode });
     if(error){ withdrawals = []; toast('Não foi possível carregar os saques.'); return; }
     withdrawals = (data || []).map(rowToWithdrawal);
   }
 
   /* ---------------- Gate ---------------- */
   async function initGate(){
-    const cfg = await getConfig();
+    const configured = await crmIsConfigured();
     const err = $('gateError');
     err.classList.remove('show');
 
-    if(cfg && cfg.passcode){
+    if(configured){
       $('gateSub').textContent = 'Digite a senha da equipe para acessar o painel.';
       $('gateFormLogin').style.display = 'block';
       $('gateFormSetup').style.display = 'none';
@@ -727,11 +735,12 @@
   }
 
   $('loginBtn').addEventListener('click', async ()=>{
-    const cfg = await getConfig();
     const val = $('loginPass').value;
     const err = $('gateError');
-    if(cfg && val === cfg.passcode){
-      enterApp();
+    const ok = await crmCheckPasscode(val);
+    if(ok){
+      authPasscode = val;
+      await enterApp();
     } else {
       err.textContent = 'Senha incorreta. Tente novamente.';
       err.classList.add('show');
@@ -753,18 +762,27 @@
       err.textContent = 'As senhas não coincidem.';
       err.classList.add('show'); return;
     }
-    await setConfig({ passcode: p1 });
-    enterApp();
+    const ok = await crmSetupPasscode(p1);
+    if(!ok){
+      err.textContent = 'Não foi possível criar a senha agora. Recarregue a página e tente de novo.';
+      err.classList.add('show'); return;
+    }
+    authPasscode = p1;
+    await enterApp();
   });
 
-  function enterApp(){
+  async function enterApp(){
     $('gate').style.display = 'none';
     $('app').classList.add('active');
+    await loadClients();
+    await loadPayments();
+    await loadWithdrawals();
     renderBoard();
     renderFinanceiro();
   }
 
   $('logoutBtn').addEventListener('click', ()=>{
+    authPasscode = null;
     $('app').classList.remove('active');
     $('gate').style.display = 'flex';
     $('loginPass').value = '';
@@ -813,9 +831,9 @@
           const prevStage = c.stage;
           c.stage = stage.id;
           c.updatedAt = Date.now();
-          const { error } = await sb.from('clients')
-            .update({ stage: stage.id, updated_at: new Date().toISOString() })
-            .eq('id', c.id);
+          const { error } = await sb.rpc('crm_update_client_stage', {
+            passcode: authPasscode, p_id: c.id, p_stage: stage.id,
+          });
           if(error){
             c.stage = prevStage;
             toast('Não foi possível mover agora.');
@@ -940,28 +958,30 @@
       pet: $('fPet').value.trim(),
       contato: $('fContato').value.trim(),
       data1: $('fData1').value || null,
-      data_compra: $('fDataCompra').value || null,
+      dataCompra: $('fDataCompra').value || null,
       obs: $('fObs').value.trim(),
-      updated_at: new Date().toISOString(),
     };
+    const id = editingId || uid();
+
+    const { error } = await sb.rpc('crm_upsert_client', {
+      passcode: authPasscode, p_id: id, p_nome: payload.nome, p_stage: payload.stage,
+      p_pet: payload.pet, p_contato: payload.contato, p_data1: payload.data1,
+      p_data_compra: payload.dataCompra, p_obs: payload.obs,
+    });
+    if(error){ toast('Não foi possível salvar agora.'); return; }
 
     if(editingId){
-      const { error } = await sb.from('clients').update(payload).eq('id', editingId);
-      if(error){ toast('Não foi possível salvar agora.'); return; }
       const c = clients.find(x=>x.id===editingId);
       Object.assign(c, {
         nome: payload.nome, stage: payload.stage, pet: payload.pet,
-        contato: payload.contato, data1: payload.data1 || '', dataCompra: payload.data_compra || '',
+        contato: payload.contato, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
         obs: payload.obs, updatedAt: Date.now(),
       });
       toast('Cliente atualizado');
     } else {
-      const id = uid();
-      const { error } = await sb.from('clients').insert({ id, ...payload, created_at: new Date().toISOString() });
-      if(error){ toast('Não foi possível adicionar agora.'); return; }
       clients.push({
         id, nome: payload.nome, stage: payload.stage, pet: payload.pet,
-        contato: payload.contato, data1: payload.data1 || '', dataCompra: payload.data_compra || '',
+        contato: payload.contato, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
         obs: payload.obs, createdAt: Date.now(), updatedAt: Date.now(),
       });
       toast('Cliente adicionado');
@@ -977,7 +997,7 @@
   });
   $('confirmDeleteNo').addEventListener('click', ()=> $('confirmDelete').style.display = 'none');
   $('confirmDeleteYes').addEventListener('click', async ()=>{
-    const { error } = await sb.from('clients').delete().eq('id', editingId);
+    const { error } = await sb.rpc('crm_delete_client', { passcode: authPasscode, p_id: editingId });
     if(error){ toast('Não foi possível excluir agora.'); return; }
     clients = clients.filter(x=>x.id!==editingId);
     closeModal();
@@ -1166,26 +1186,22 @@
       toast('Preencha data, descrição e um valor válido.');
       return;
     }
-    const payload = {
-      data,
-      valor,
-      descricao,
-      categoria: $('pCategoria').value.trim(),
-      investido_por: $('pInvestidoPor').value,
-      updated_at: new Date().toISOString(),
-    };
+    const categoria = $('pCategoria').value.trim();
+    const investidoPor = $('pInvestidoPor').value;
+    const id = editingPaymentId || uid('p');
+
+    const { error } = await sb.rpc('crm_upsert_payment', {
+      passcode: authPasscode, p_id: id, p_data: data, p_valor: valor,
+      p_descricao: descricao, p_categoria: categoria, p_investido_por: investidoPor,
+    });
+    if(error){ toast('Não foi possível salvar agora.'); return; }
 
     if(editingPaymentId){
-      const { error } = await sb.from('payments').update(payload).eq('id', editingPaymentId);
-      if(error){ toast('Não foi possível salvar agora.'); return; }
       const p = payments.find(x=>x.id===editingPaymentId);
-      Object.assign(p, { data, valor, descricao, categoria: payload.categoria, investidoPor: payload.investido_por, updatedAt: Date.now() });
+      Object.assign(p, { data, valor, descricao, categoria, investidoPor, updatedAt: Date.now() });
       toast('Pagamento atualizado');
     } else {
-      const id = uid('p');
-      const { error } = await sb.from('payments').insert({ id, ...payload, created_at: new Date().toISOString() });
-      if(error){ toast('Não foi possível adicionar agora.'); return; }
-      payments.push({ id, data, valor, descricao, categoria: payload.categoria, investidoPor: payload.investido_por, updatedAt: Date.now() });
+      payments.push({ id, data, valor, descricao, categoria, investidoPor, updatedAt: Date.now() });
       toast('Pagamento adicionado');
     }
     closePaymentModal();
@@ -1197,7 +1213,7 @@
   });
   $('paymentConfirmDeleteNo').addEventListener('click', ()=> $('paymentConfirmDelete').style.display = 'none');
   $('paymentConfirmDeleteYes').addEventListener('click', async ()=>{
-    const { error } = await sb.from('payments').delete().eq('id', editingPaymentId);
+    const { error } = await sb.rpc('crm_delete_payment', { passcode: authPasscode, p_id: editingPaymentId });
     if(error){ toast('Não foi possível excluir agora.'); return; }
     payments = payments.filter(x=>x.id!==editingPaymentId);
     closePaymentModal();
@@ -1257,23 +1273,20 @@
       toast('Preencha data e um valor válido.');
       return;
     }
-    const payload = {
-      data,
-      valor,
-      descricao: $('wDescricao').value.trim(),
-    };
+    const descricao = $('wDescricao').value.trim();
+    const id = editingWithdrawalId || uid('w');
+
+    const { error } = await sb.rpc('crm_upsert_withdrawal', {
+      passcode: authPasscode, p_id: id, p_data: data, p_valor: valor, p_descricao: descricao,
+    });
+    if(error){ toast('Não foi possível salvar agora.'); return; }
 
     if(editingWithdrawalId){
-      const { error } = await sb.from('withdrawals').update(payload).eq('id', editingWithdrawalId);
-      if(error){ toast('Não foi possível salvar agora.'); return; }
       const w = withdrawals.find(x=>x.id===editingWithdrawalId);
-      Object.assign(w, payload);
+      Object.assign(w, { data, valor, descricao });
       toast('Saque atualizado');
     } else {
-      const id = uid('w');
-      const { error } = await sb.from('withdrawals').insert({ id, ...payload, created_at: new Date().toISOString() });
-      if(error){ toast('Não foi possível adicionar agora.'); return; }
-      withdrawals.push({ id, ...payload });
+      withdrawals.push({ id, data, valor, descricao });
       toast('Saque adicionado');
     }
     closeWithdrawalModal();
@@ -1285,7 +1298,7 @@
   });
   $('withdrawalConfirmDeleteNo').addEventListener('click', ()=> $('withdrawalConfirmDelete').style.display = 'none');
   $('withdrawalConfirmDeleteYes').addEventListener('click', async ()=>{
-    const { error } = await sb.from('withdrawals').delete().eq('id', editingWithdrawalId);
+    const { error } = await sb.rpc('crm_delete_withdrawal', { passcode: authPasscode, p_id: editingWithdrawalId });
     if(error){ toast('Não foi possível excluir agora.'); return; }
     withdrawals = withdrawals.filter(x=>x.id!==editingWithdrawalId);
     closeWithdrawalModal();
@@ -1298,9 +1311,6 @@
   /* ---------------- Init ---------------- */
   async function init(){
     buildBoardSkeleton();
-    await loadClients();
-    await loadPayments();
-    await loadWithdrawals();
     await initGate();
   }
   init();
