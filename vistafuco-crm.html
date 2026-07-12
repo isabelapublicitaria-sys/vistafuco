@@ -64,23 +64,16 @@
     text-align:center;
   }
   .tag-icon{
-    width:52px;height:52px;
+    width:56px;height:56px;
     margin:0 auto 14px;
     border-radius:14px;
     background:var(--clay);
     display:flex;align-items:center;justify-content:center;
     position:relative;
     box-shadow: inset 0 -3px 0 rgba(0,0,0,0.12);
+    overflow:hidden;
   }
-  .tag-icon::after{
-    content:'';
-    width:8px;height:8px;
-    border-radius:50%;
-    background:var(--cream);
-    position:absolute;
-    top:8px; left:8px;
-  }
-  .tag-icon svg{width:26px;height:26px;}
+  .tag-icon img{width:100%;height:100%;object-fit:contain;padding:9px;}
   .gate-card h1{font-size:21px;margin:0 0 4px;}
   .gate-sub{font-size:13.5px;color:var(--ink-soft);margin:0 0 22px;line-height:1.5;}
   .field{text-align:left;margin-bottom:14px;}
@@ -143,8 +136,8 @@
     flex-wrap:wrap;
   }
   .brand{display:flex;align-items:center;gap:10px;margin-right:auto;}
-  .brand .tag-icon{width:36px;height:36px;border-radius:10px;margin:0;}
-  .brand .tag-icon svg{width:18px;height:18px;}
+  .brand .tag-icon{width:40px;height:40px;border-radius:10px;margin:0;}
+  .brand .tag-icon img{padding:6px;}
   .brand-text h1{font-size:16px;margin:0;line-height:1.15;}
   .brand-text span{font-size:11.5px;color:var(--ink-soft);}
   .search-wrap{position:relative;}
@@ -301,6 +294,14 @@
   /* ---------- Financeiro ---------- */
   .financeiro{flex:1; display:none; overflow-y:auto; padding:18px 20px 30px;}
   .financeiro.active{display:block;}
+  .fin-month-bar{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+  .fin-month-bar label{font-size:12.5px; font-weight:600; color:var(--ink-soft);}
+  .fin-month-bar select{
+    border:1.5px solid var(--line); background:var(--paper); border-radius:10px;
+    padding:8px 12px; font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    color:var(--ink); outline:none;
+  }
+  .fin-month-bar select:focus{border-color:var(--clay);}
   .fin-summary{display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px;}
   .fin-card{
     background:var(--paper); border:1px solid var(--line); border-radius:14px;
@@ -334,6 +335,42 @@
   .fin-amount{font-weight:700;}
   .fin-empty{font-size:12.5px; color:var(--ink-soft); text-align:center; padding:20px 10px;}
   .fin-split-preview{background:var(--cream); border-radius:10px; padding:10px 12px; font-size:12.5px; color:var(--ink-soft); margin:2px 0 4px; line-height:1.6;}
+
+  /* ---------- Marketing ---------- */
+  .marketing{flex:1; display:none; overflow-y:auto; padding:18px 20px 30px;}
+  .marketing.active{display:block;}
+  .mkt-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; margin-bottom:16px; box-shadow:var(--shadow); max-width:720px;
+  }
+  .mkt-card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .mkt-card h2{font-size:15px; margin:0 0 10px;}
+  .mkt-card-head h2{margin:0;}
+  .mkt-card textarea{
+    width:100%; border:1.5px solid var(--line); background:var(--cream); border-radius:10px;
+    padding:10px 12px; font-family:'Inter',sans-serif; font-size:13.5px; color:var(--ink);
+    outline:none; resize:vertical; line-height:1.5;
+  }
+  .mkt-card textarea:focus{border-color:var(--clay); background:var(--paper);}
+  .mkt-logo-row{display:flex; align-items:center; gap:16px;}
+  .mkt-logo-preview{
+    width:72px; height:72px; border-radius:14px; background:var(--clay);
+    object-fit:contain; padding:10px; flex:none; box-shadow:var(--shadow);
+  }
+  .mkt-color-row{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+  .mkt-color-row input[type="color"]{width:36px; height:36px; border:none; border-radius:8px; padding:0; cursor:pointer; flex:none; background:none;}
+  .mkt-color-row input[type="text"]{
+    border:1.5px solid var(--line); background:var(--cream); border-radius:8px;
+    padding:7px 10px; font-size:12.5px; font-family:'Inter',sans-serif; outline:none; color:var(--ink);
+  }
+  .mkt-color-row input[type="text"]:focus{border-color:var(--clay);}
+  .mkt-color-row .mkt-color-label{flex:1;}
+  .mkt-color-row .mkt-color-hex{width:90px;}
+  .mkt-color-remove{
+    background:transparent; border:none; color:var(--ink-soft); cursor:pointer;
+    font-size:14px; padding:4px 8px; flex:none;
+  }
+  .mkt-color-remove:hover{color:var(--danger);}
 </style>
 </head>
 <body>
@@ -344,32 +381,23 @@
   <div class="gate" id="gate">
     <div class="gate-card">
       <div class="tag-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <img src="https://gcp-images.majestic.ink.rsvcloud.com/images/store/logo_image/b3f91c10cb391ee289930db69691d0e2.webp" alt="Vista Fuço">
       </div>
       <h1 id="gateTitle">Vista Fuço · CRM</h1>
       <p class="gate-sub" id="gateSub">Carregando...</p>
 
       <div class="gate-error" id="gateError"></div>
 
-      <div id="gateFormLogin" style="display:none;">
+      <div id="gateFormLogin">
         <div class="field">
-          <label>Senha da equipe</label>
-          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="off">
+          <label>E-mail</label>
+          <input type="email" id="loginEmail" placeholder="seu@email.com" autocomplete="username">
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
         </div>
         <button class="btn btn-primary" id="loginBtn">Entrar</button>
-      </div>
-
-      <div id="gateFormSetup" style="display:none;">
-        <div class="field">
-          <label>Criar senha de acesso da equipe</label>
-          <input type="password" id="setupPass1" placeholder="Mínimo 4 caracteres" autocomplete="off">
-        </div>
-        <div class="field">
-          <label>Confirmar senha</label>
-          <input type="password" id="setupPass2" placeholder="Repita a senha" autocomplete="off">
-        </div>
-        <button class="btn btn-primary" id="setupBtn">Criar e entrar</button>
-        <div class="gate-switch">Essa senha é compartilhada por quem cuida do atendimento.</div>
       </div>
     </div>
   </div>
@@ -379,7 +407,7 @@
     <div class="topbar">
       <div class="brand">
         <div class="tag-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <img src="https://gcp-images.majestic.ink.rsvcloud.com/images/store/logo_image/b3f91c10cb391ee289930db69691d0e2.webp" alt="Vista Fuço">
         </div>
         <div class="brand-text">
           <h1>Vista Fuço · CRM</h1>
@@ -397,18 +425,25 @@
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="board">Quadro</button>
       <button class="tab-btn" data-tab="financeiro">Financeiro</button>
+      <button class="tab-btn" data-tab="marketing">Marketing</button>
     </div>
 
     <div class="board" id="board"><!-- columns injected by JS --></div>
 
     <div class="financeiro" id="financeiro">
-      <div class="fin-summary" id="finSummary"><!-- cards injected by JS --></div>
-      <div class="fin-settle" id="finSettle"><!-- settlement text injected by JS --></div>
+      <div class="fin-settle" id="finSettle"><!-- saldo acumulado entre sócias, injected by JS --></div>
+
+      <div class="fin-month-bar">
+        <label for="finMonthSelect">Mês</label>
+        <select id="finMonthSelect"></select>
+      </div>
+
+      <div class="fin-summary" id="finSummary"><!-- caixa do mês, injected by JS --></div>
 
       <div class="fin-section">
         <div class="fin-section-head">
-          <h2>Pagamentos</h2>
-          <button class="btn btn-small btn-add" id="addPaymentBtn">+ Novo pagamento</button>
+          <h2>Gastos</h2>
+          <button class="btn btn-small btn-add" id="addPaymentBtn">+ Novo gasto</button>
         </div>
         <div class="fin-table-scroll">
           <table class="fin-table">
@@ -422,18 +457,91 @@
 
       <div class="fin-section">
         <div class="fin-section-head">
-          <h2>Saques</h2>
+          <h2>Vendas</h2>
+          <button class="btn btn-small btn-add" id="addSaleBtn">+ Nova venda</button>
+        </div>
+        <div class="fin-table-scroll">
+          <table class="fin-table">
+            <thead>
+              <tr><th>Data</th><th>Quantidade</th><th>Lucro</th></tr>
+            </thead>
+            <tbody id="salesBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="fin-section">
+        <div class="fin-section-head">
+          <h2>Saques do reserva</h2>
           <button class="btn btn-small btn-add" id="addWithdrawalBtn">+ Novo saque</button>
         </div>
         <div class="fin-table-scroll">
           <table class="fin-table">
             <thead>
-              <tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Divisão</th></tr>
+              <tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Conta</th></tr>
             </thead>
             <tbody id="withdrawalsBody"></tbody>
           </table>
         </div>
       </div>
+
+      <div class="fin-section">
+        <div class="fin-section-head">
+          <h2>Repasses</h2>
+          <button class="btn btn-small btn-add" id="addTransferBtn">+ Novo repasse</button>
+        </div>
+        <div class="fin-table-scroll">
+          <table class="fin-table">
+            <thead>
+              <tr><th>Data</th><th>Valor</th><th>Enviado para</th></tr>
+            </thead>
+            <tbody id="transfersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="marketing" id="marketing">
+      <div class="mkt-card">
+        <div class="mkt-card-head"><h2>Logo &amp; identidade</h2></div>
+        <div class="mkt-logo-row">
+          <img id="mktLogoPreview" class="mkt-logo-preview" alt="Logo">
+          <div class="field" style="flex:1; margin:0;">
+            <label>URL da logo</label>
+            <input type="text" id="mktLogoUrl" placeholder="https://...">
+          </div>
+        </div>
+      </div>
+
+      <div class="mkt-card">
+        <div class="mkt-card-head">
+          <h2>Cores da marca</h2>
+          <button class="btn btn-small btn-add" id="addColorBtn">+ Cor</button>
+        </div>
+        <div id="mktColors"><!-- swatches injected by JS --></div>
+      </div>
+
+      <div class="mkt-card">
+        <h2>Persona</h2>
+        <textarea id="mktPersona" rows="5" placeholder="Quem é o cliente ideal: nome fictício, idade, comportamento, dores, o que busca..."></textarea>
+      </div>
+
+      <div class="mkt-card">
+        <h2>Público-alvo</h2>
+        <textarea id="mktPublico" rows="4" placeholder="Faixa etária, interesses, onde estão, poder de compra..."></textarea>
+      </div>
+
+      <div class="mkt-card">
+        <h2>Tom de voz</h2>
+        <textarea id="mktTom" rows="4" placeholder="Como a marca fala: divertido, carinhoso, direto..."></textarea>
+      </div>
+
+      <div class="mkt-card">
+        <h2>Plano de marketing / guia completo</h2>
+        <textarea id="mktPlano" rows="10" placeholder="Estratégia, canais, calendário de conteúdo, metas, campanhas..."></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="saveMarketingBtn" style="max-width:240px;">Salvar guia de marketing</button>
     </div>
   </div>
 
@@ -560,15 +668,20 @@
           <input type="date" id="wData">
         </div>
         <div class="field">
-          <label>Valor total <span class="req">*</span></label>
+          <label>Valor <span class="req">*</span></label>
           <input type="text" id="wValor" placeholder="Ex: 227,00" inputmode="decimal">
         </div>
       </div>
-      <div class="field">
-        <label>Descrição</label>
-        <input type="text" id="wDescricao" placeholder="Opcional">
+      <div class="row2">
+        <div class="field">
+          <label>Conta <span class="req">*</span></label>
+          <select id="wConta"></select>
+        </div>
+        <div class="field">
+          <label>Descrição</label>
+          <input type="text" id="wDescricao" placeholder="Opcional">
+        </div>
       </div>
-      <div class="fin-split-preview" id="wSplitPreview"></div>
 
       <div class="modal-actions">
         <button class="btn btn-delete" id="withdrawalDeleteBtn" style="display:none;">Excluir</button>
@@ -579,6 +692,84 @@
         <div style="display:flex; gap:8px;">
           <button class="btn btn-delete" id="withdrawalConfirmDeleteYes">Sim, excluir</button>
           <button class="btn btn-ghost" id="withdrawalConfirmDeleteNo">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALE MODAL -->
+  <div class="overlay" id="saleOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="saleModalTitle">Nova venda</h2>
+        <button class="modal-close" id="saleModalClose">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Data <span class="req">*</span></label>
+          <input type="date" id="sData">
+        </div>
+        <div class="field">
+          <label>Quantidade <span class="req">*</span></label>
+          <input type="number" id="sQuantidade" min="1" step="1" placeholder="Ex: 1">
+        </div>
+      </div>
+      <div class="field">
+        <label>Lucro <span class="req">*</span></label>
+        <input type="text" id="sLucro" placeholder="Ex: 70,29" inputmode="decimal">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-delete" id="saleDeleteBtn" style="display:none;">Excluir</button>
+        <button class="btn btn-primary" id="saleSaveBtn">Salvar</button>
+      </div>
+      <div class="confirm-box" id="saleConfirmDelete" style="display:none;">
+        Excluir esta venda permanentemente? Essa ação não pode ser desfeita.
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-delete" id="saleConfirmDeleteYes">Sim, excluir</button>
+          <button class="btn btn-ghost" id="saleConfirmDeleteNo">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSFER MODAL -->
+  <div class="overlay" id="transferOverlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="transferModalTitle">Novo repasse</h2>
+        <button class="modal-close" id="transferModalClose">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Data <span class="req">*</span></label>
+          <input type="date" id="tData">
+        </div>
+        <div class="field">
+          <label>Valor <span class="req">*</span></label>
+          <input type="text" id="tValor" placeholder="Ex: 75,92" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field">
+        <label>Enviado para <span class="req">*</span></label>
+        <select id="tEnviadoPara"></select>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-delete" id="transferDeleteBtn" style="display:none;">Excluir</button>
+        <button class="btn btn-primary" id="transferSaveBtn">Salvar</button>
+      </div>
+      <div class="confirm-box" id="transferConfirmDelete" style="display:none;">
+        Excluir este repasse permanentemente? Essa ação não pode ser desfeita.
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-delete" id="transferConfirmDeleteYes">Sim, excluir</button>
+          <button class="btn btn-ghost" id="transferConfirmDeleteNo">Cancelar</button>
         </div>
       </div>
     </div>
@@ -613,10 +804,21 @@
 
   let payments = [];
   let withdrawals = [];
+  let sales = [];
+  let transfers = [];
   let editingPaymentId = null;
   let editingWithdrawalId = null;
+  let editingSaleId = null;
+  let editingTransferId = null;
+  let selectedMonth = null;
 
-  let authPasscode = null;
+  let marketing = null;
+  const DEFAULT_MARKETING_COLORS = [
+    { label: 'Clay (principal)', hex: '#B8936B' },
+    { label: 'Cream (fundo)', hex: '#FAF6EE' },
+    { label: 'Ink (texto)', hex: '#2B2118' },
+  ];
+  const DEFAULT_LOGO_URL = 'https://gcp-images.majestic.ink.rsvcloud.com/images/store/logo_image/b3f91c10cb391ee289930db69691d0e2.webp';
 
   const $ = (id) => document.getElementById(id);
   const root = $('vfcrm');
@@ -669,28 +871,13 @@
   }
 
   async function loadClients(){
-    const { data, error } = await sb.rpc('crm_list_clients', { passcode: authPasscode });
+    const { data, error } = await sb.from('clients').select('*');
     if(error){
       clients = [];
       toast('Não foi possível carregar os clientes.');
       return;
     }
     clients = (data || []).map(rowToClient);
-  }
-  async function crmIsConfigured(){
-    const { data, error } = await sb.rpc('crm_is_configured');
-    if(error) return false;
-    return !!data;
-  }
-  async function crmCheckPasscode(passcode){
-    const { data, error } = await sb.rpc('crm_check_passcode', { passcode });
-    if(error) return false;
-    return !!data;
-  }
-  async function crmSetupPasscode(passcode){
-    const { data, error } = await sb.rpc('crm_setup_passcode', { new_passcode: passcode });
-    if(error) return false;
-    return !!data;
   }
 
   /* ---------------- Financeiro: storage ---------------- */
@@ -711,73 +898,92 @@
       data: r.data || '',
       valor: Number(r.valor) || 0,
       descricao: r.descricao || '',
+      recebidoPor: r.recebido_por || '',
+    };
+  }
+  function rowToSale(r){
+    return {
+      id: r.id,
+      data: r.data || '',
+      quantidade: Number(r.quantidade) || 0,
+      lucro: Number(r.lucro) || 0,
+    };
+  }
+  function rowToTransfer(r){
+    return {
+      id: r.id,
+      data: r.data || '',
+      valor: Number(r.valor) || 0,
+      enviadoPara: r.enviado_para || '',
     };
   }
 
   async function loadPayments(){
-    const { data, error } = await sb.rpc('crm_list_payments', { passcode: authPasscode });
-    if(error){ payments = []; toast('Não foi possível carregar os pagamentos.'); return; }
+    const { data, error } = await sb.from('payments').select('*');
+    if(error){ payments = []; toast('Não foi possível carregar os gastos.'); return; }
     payments = (data || []).map(rowToPayment);
   }
   async function loadWithdrawals(){
-    const { data, error } = await sb.rpc('crm_list_withdrawals', { passcode: authPasscode });
+    const { data, error } = await sb.from('withdrawals').select('*');
     if(error){ withdrawals = []; toast('Não foi possível carregar os saques.'); return; }
     withdrawals = (data || []).map(rowToWithdrawal);
+  }
+  async function loadSales(){
+    const { data, error } = await sb.from('sales').select('*');
+    if(error){ sales = []; toast('Não foi possível carregar as vendas.'); return; }
+    sales = (data || []).map(rowToSale);
+  }
+  async function loadTransfers(){
+    const { data, error } = await sb.from('transfers').select('*');
+    if(error){ transfers = []; toast('Não foi possível carregar os repasses.'); return; }
+    transfers = (data || []).map(rowToTransfer);
+  }
+
+  async function loadMarketing(){
+    const { data, error } = await sb.from('marketing').select('*').eq('id', 1).maybeSingle();
+    if(error || !data){
+      marketing = { persona:'', publicoAlvo:'', tomDeVoz:'', logoUrl: DEFAULT_LOGO_URL, cores: DEFAULT_MARKETING_COLORS.slice(), plano:'' };
+      return;
+    }
+    marketing = {
+      persona: data.persona || '',
+      publicoAlvo: data.publico_alvo || '',
+      tomDeVoz: data.tom_de_voz || '',
+      logoUrl: data.logo_url || DEFAULT_LOGO_URL,
+      cores: Array.isArray(data.cores) && data.cores.length ? data.cores : DEFAULT_MARKETING_COLORS.slice(),
+      plano: data.plano || '',
+    };
   }
 
   /* ---------------- Gate ---------------- */
   async function initGate(){
-    const configured = await crmIsConfigured();
     const err = $('gateError');
     err.classList.remove('show');
+    $('gateSub').textContent = 'Entre com o e-mail e senha da sua conta da equipe.';
 
-    if(configured){
-      $('gateSub').textContent = 'Digite a senha da equipe para acessar o painel.';
-      $('gateFormLogin').style.display = 'block';
-      $('gateFormSetup').style.display = 'none';
-    } else {
-      $('gateSub').textContent = 'Primeiro acesso: crie a senha que sua equipe vai usar para entrar.';
-      $('gateFormLogin').style.display = 'none';
-      $('gateFormSetup').style.display = 'block';
+    const { data: { session } } = await sb.auth.getSession();
+    if(session){
+      await enterApp();
     }
   }
 
   $('loginBtn').addEventListener('click', async ()=>{
-    const val = $('loginPass').value;
+    const email = $('loginEmail').value.trim();
+    const password = $('loginPass').value;
     const err = $('gateError');
-    const ok = await crmCheckPasscode(val);
-    if(ok){
-      authPasscode = val;
+    err.classList.remove('show');
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(!error){
       await enterApp();
     } else {
-      err.textContent = 'Senha incorreta. Tente novamente.';
+      err.textContent = 'E-mail ou senha incorretos.';
       err.classList.add('show');
       const card = document.querySelector('.gate-card');
       card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
     }
   });
   $('loginPass').addEventListener('keydown', (e)=>{ if(e.key==='Enter') $('loginBtn').click(); });
-
-  $('setupBtn').addEventListener('click', async ()=>{
-    const p1 = $('setupPass1').value;
-    const p2 = $('setupPass2').value;
-    const err = $('gateError');
-    if(p1.length < 4){
-      err.textContent = 'Use pelo menos 4 caracteres.';
-      err.classList.add('show'); return;
-    }
-    if(p1 !== p2){
-      err.textContent = 'As senhas não coincidem.';
-      err.classList.add('show'); return;
-    }
-    const ok = await crmSetupPasscode(p1);
-    if(!ok){
-      err.textContent = 'Não foi possível criar a senha agora. Recarregue a página e tente de novo.';
-      err.classList.add('show'); return;
-    }
-    authPasscode = p1;
-    await enterApp();
-  });
+  $('loginEmail').addEventListener('keydown', (e)=>{ if(e.key==='Enter') $('loginPass').focus(); });
 
   async function enterApp(){
     $('gate').style.display = 'none';
@@ -785,14 +991,19 @@
     await loadClients();
     await loadPayments();
     await loadWithdrawals();
+    await loadSales();
+    await loadTransfers();
+    await loadMarketing();
     renderBoard();
     renderFinanceiro();
+    renderMarketing();
   }
 
-  $('logoutBtn').addEventListener('click', ()=>{
-    authPasscode = null;
+  $('logoutBtn').addEventListener('click', async ()=>{
+    await sb.auth.signOut();
     $('app').classList.remove('active');
     $('gate').style.display = 'flex';
+    $('loginEmail').value = '';
     $('loginPass').value = '';
     initGate();
   });
@@ -802,11 +1013,12 @@
     const btn = e.target.closest('.tab-btn');
     if(!btn) return;
     document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b===btn));
-    const isFinanceiro = btn.dataset.tab === 'financeiro';
-    $('financeiro').classList.toggle('active', isFinanceiro);
-    $('board').style.display = isFinanceiro ? 'none' : 'flex';
-    $('searchInput').parentElement.style.display = isFinanceiro ? 'none' : '';
-    $('addClientBtn').style.display = isFinanceiro ? 'none' : '';
+    const tab = btn.dataset.tab;
+    $('financeiro').classList.toggle('active', tab === 'financeiro');
+    $('marketing').classList.toggle('active', tab === 'marketing');
+    $('board').style.display = tab === 'board' ? 'flex' : 'none';
+    $('searchInput').parentElement.style.display = tab === 'board' ? '' : 'none';
+    $('addClientBtn').style.display = tab === 'board' ? '' : 'none';
   });
 
   /* ---------------- Board rendering ---------------- */
@@ -839,9 +1051,9 @@
           const prevStage = c.stage;
           c.stage = stage.id;
           c.updatedAt = Date.now();
-          const { error } = await sb.rpc('crm_update_client_stage', {
-            passcode: authPasscode, p_id: c.id, p_stage: stage.id,
-          });
+          const { error } = await sb.from('clients')
+            .update({ stage: stage.id, updated_at: new Date().toISOString() })
+            .eq('id', c.id);
           if(error){
             c.stage = prevStage;
             toast('Não foi possível mover agora.');
@@ -971,10 +1183,10 @@
     };
     const id = editingId || uid();
 
-    const { error } = await sb.rpc('crm_upsert_client', {
-      passcode: authPasscode, p_id: id, p_nome: payload.nome, p_stage: payload.stage,
-      p_pet: payload.pet, p_contato: payload.contato, p_data1: payload.data1,
-      p_data_compra: payload.dataCompra, p_obs: payload.obs,
+    const { error } = await sb.from('clients').upsert({
+      id, nome: payload.nome, stage: payload.stage, pet: payload.pet,
+      contato: payload.contato, data1: payload.data1, data_compra: payload.dataCompra,
+      obs: payload.obs, updated_at: new Date().toISOString(),
     });
     if(error){ toast('Não foi possível salvar agora.'); return; }
 
@@ -1005,7 +1217,7 @@
   });
   $('confirmDeleteNo').addEventListener('click', ()=> $('confirmDelete').style.display = 'none');
   $('confirmDeleteYes').addEventListener('click', async ()=>{
-    const { error } = await sb.rpc('crm_delete_client', { passcode: authPasscode, p_id: editingId });
+    const { error } = await sb.from('clients').delete().eq('id', editingId);
     if(error){ toast('Não foi possível excluir agora.'); return; }
     clients = clients.filter(x=>x.id!==editingId);
     closeModal();
@@ -1016,19 +1228,65 @@
   $('addClientBtn').addEventListener('click', ()=> openModal(null));
 
   /* ---------------- Financeiro: cálculo ---------------- */
+  function monthKey(dateStr){
+    return (dateStr || '').slice(0, 7);
+  }
+  function currentMonthKey(){
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+  const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  function monthLabel(key){
+    const [y, m] = key.split('-');
+    return `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
+  }
+  function allMonthKeys(){
+    const keys = new Set([currentMonthKey()]);
+    payments.forEach(p=> p.data && keys.add(monthKey(p.data)));
+    sales.forEach(s=> s.data && keys.add(monthKey(s.data)));
+    withdrawals.forEach(w=> w.data && keys.add(monthKey(w.data)));
+    transfers.forEach(t=> t.data && keys.add(monthKey(t.data)));
+    return [...keys].sort().reverse();
+  }
+  function defaultDateForSelectedMonth(){
+    const today = new Date().toISOString().slice(0, 10);
+    if(selectedMonth === currentMonthKey()) return today;
+    return selectedMonth + '-01';
+  }
+
+  // Saldo acumulado entre sócias: soma todo o histórico (não só o mês
+  // selecionado), por isso o valor pendente carrega automaticamente de
+  // um mês pro outro até ser quitado com um repasse.
   function computeBalances(){
-    const total = payments.reduce((s,p)=> s + p.valor, 0);
+    const totalGastos = payments.reduce((s,p)=> s + p.valor, 0);
+    const totalLucro = sales.reduce((s,x)=> s + x.lucro, 0);
     const n = PARTNERS.length || 1;
-    const fairShare = total / n;
-    const invested = {};
-    PARTNERS.forEach(name=> invested[name] = 0);
-    payments.forEach(p=>{
-      if(!(p.investidoPor in invested)) invested[p.investidoPor] = 0;
-      invested[p.investidoPor] += p.valor;
-    });
+    const fairShareGastos = totalGastos / n;
+    const fairShareLucro = totalLucro / n;
+
     const balance = {};
-    Object.keys(invested).forEach(name=>{ balance[name] = invested[name] - fairShare; });
-    return { total, fairShare, invested, balance };
+    PARTNERS.forEach(name=> balance[name] = 0);
+
+    payments.forEach(p=>{
+      if(!(p.investidoPor in balance)) balance[p.investidoPor] = 0;
+      balance[p.investidoPor] += p.valor;
+    });
+    Object.keys(balance).forEach(name=>{ balance[name] += fairShareLucro - fairShareGastos; });
+
+    withdrawals.forEach(w=>{
+      if(w.recebidoPor && w.recebidoPor in balance) balance[w.recebidoPor] -= w.valor;
+    });
+
+    // Repasse = pix direto entre as duas sócias (não vem do caixa da
+    // empresa). Quem recebe abate do saldo; quem enviou (a outra sócia,
+    // já que só existem duas) ganha esse valor de volta.
+    transfers.forEach(t=>{
+      if(t.enviadoPara in balance) balance[t.enviadoPara] -= t.valor;
+      const sender = PARTNERS.find(name=> name !== t.enviadoPara);
+      if(sender && sender in balance) balance[sender] += t.valor;
+    });
+
+    return { totalGastos, totalLucro, fairShareGastos, fairShareLucro, balance };
   }
 
   function computeSettlements(balance){
@@ -1040,77 +1298,93 @@
     });
     creditors.sort((a,b)=> b.amount - a.amount);
     debtors.sort((a,b)=> b.amount - a.amount);
-    const transfers = [];
+    const result = [];
     let i = 0, j = 0;
     while(i < debtors.length && j < creditors.length){
       const pay = Math.min(debtors[i].amount, creditors[j].amount);
-      transfers.push({ from: debtors[i].name, to: creditors[j].name, amount: pay });
+      result.push({ from: debtors[i].name, to: creditors[j].name, amount: pay });
       debtors[i].amount -= pay;
       creditors[j].amount -= pay;
       if(debtors[i].amount < 0.005) i++;
       if(creditors[j].amount < 0.005) j++;
     }
-    return transfers;
+    return result;
   }
 
   /* ---------------- Financeiro: render ---------------- */
   function renderFinanceiro(){
-    renderFinSummary();
+    populateMonthSelect();
+    renderFinSettle();
+    renderCaixa();
     renderPaymentsTable();
+    renderSalesTable();
     renderWithdrawalsTable();
+    renderTransfersTable();
   }
 
-  function renderFinSummary(){
-    const { total, fairShare, invested, balance } = computeBalances();
-    const totalSacado = withdrawals.reduce((s,w)=> s + w.valor, 0);
-    const shareSacado = totalSacado / (PARTNERS.length || 1);
+  function populateMonthSelect(){
+    const sel = $('finMonthSelect');
+    const keys = allMonthKeys();
+    if(!selectedMonth || !keys.includes(selectedMonth)) selectedMonth = keys[0];
+    sel.innerHTML = keys.map(k=> `<option value="${k}" ${k===selectedMonth?'selected':''}>${monthLabel(k)}</option>`).join('');
+  }
+  $('finMonthSelect').addEventListener('change', (e)=>{
+    selectedMonth = e.target.value;
+    renderCaixa();
+    renderPaymentsTable();
+    renderSalesTable();
+    renderWithdrawalsTable();
+    renderTransfersTable();
+  });
 
-    let cards = `
+  function renderFinSettle(){
+    const { balance } = computeBalances();
+    const settlements = computeSettlements(balance);
+    const el = $('finSettle');
+    const hasAnyData = payments.length || sales.length || withdrawals.length || transfers.length;
+    if(!hasAnyData){
+      el.innerHTML = 'Nenhum lançamento ainda. O saldo entre sócias aparece aqui conforme vocês forem cadastrando gastos, vendas, saques e repasses.';
+    } else if(settlements.length === 0){
+      el.innerHTML = '<span class="fin-settle-ok">Contas equilibradas — ninguém deve nada no momento.</span>';
+    } else {
+      el.innerHTML = settlements.map(t=>
+        `<div><strong>${escapeHtml(t.from)}</strong> deve pagar <strong>${fmtBRL(t.amount)}</strong> para <strong>${escapeHtml(t.to)}</strong></div>`
+      ).join('') + '<div class="fin-sub" style="margin-top:6px;">Saldo acumulado de todos os meses — some gastos, vendas, saques e repasses até hoje.</div>';
+    }
+  }
+
+  function renderCaixa(){
+    const monthPayments = payments.filter(p=> monthKey(p.data) === selectedMonth);
+    const monthSales = sales.filter(s=> monthKey(s.data) === selectedMonth);
+    const totalGastosMes = monthPayments.reduce((s,p)=> s + p.valor, 0);
+    const totalLucroMes = monthSales.reduce((s,x)=> s + x.lucro, 0);
+    const fechamento = totalLucroMes - totalGastosMes;
+    const cls = fechamento > 0.005 ? 'pos' : (fechamento < -0.005 ? 'neg' : '');
+
+    $('finSummary').innerHTML = `
       <div class="fin-card">
-        <div class="fin-label">Total gasto</div>
-        <div class="fin-value">${fmtBRL(total)}</div>
-        <div class="fin-sub">Cota justa por sócia: ${fmtBRL(fairShare)}</div>
+        <div class="fin-label">Total gastos</div>
+        <div class="fin-value">${fmtBRL(totalGastosMes)}</div>
       </div>
       <div class="fin-card">
-        <div class="fin-label">Total sacado</div>
-        <div class="fin-value">${fmtBRL(totalSacado)}</div>
-        <div class="fin-sub">${fmtBRL(shareSacado)} por sócia</div>
+        <div class="fin-label">Total lucro</div>
+        <div class="fin-value">${fmtBRL(totalLucroMes)}</div>
+      </div>
+      <div class="fin-card">
+        <div class="fin-label">Fechamento</div>
+        <div class="fin-value ${cls}">${fmtBRL(fechamento)}</div>
       </div>
     `;
-    PARTNERS.forEach(name=>{
-      const bal = balance[name] || 0;
-      const cls = bal > 0.005 ? 'pos' : (bal < -0.005 ? 'neg' : '');
-      const subText = bal > 0.005 ? 'a receber dos custos' : (bal < -0.005 ? 'a pagar dos custos' : 'em dia');
-      cards += `
-        <div class="fin-card">
-          <div class="fin-label">${escapeHtml(name)}</div>
-          <div class="fin-value">${fmtBRL(invested[name]||0)}</div>
-          <div class="fin-sub ${cls}" style="font-weight:600;">${fmtBRL(Math.abs(bal))} ${subText}</div>
-        </div>
-      `;
-    });
-    $('finSummary').innerHTML = cards;
-
-    const transfers = computeSettlements(balance);
-    const settleEl = $('finSettle');
-    if(payments.length === 0){
-      settleEl.innerHTML = 'Nenhum pagamento lançado ainda.';
-    } else if(transfers.length === 0){
-      settleEl.innerHTML = '<span class="fin-settle-ok">Contas equilibradas — ninguém deve nada no momento.</span>';
-    } else {
-      settleEl.innerHTML = transfers.map(t=>
-        `<div><strong>${escapeHtml(t.from)}</strong> deve pagar <strong>${fmtBRL(t.amount)}</strong> para <strong>${escapeHtml(t.to)}</strong></div>`
-      ).join('');
-    }
   }
 
   function renderPaymentsTable(){
     const body = $('paymentsBody');
-    if(payments.length === 0){
-      body.innerHTML = `<tr><td colspan="5" class="fin-empty">Nenhum pagamento registrado ainda.</td></tr>`;
+    const list = payments.filter(p=> monthKey(p.data) === selectedMonth);
+    if(list.length === 0){
+      body.innerHTML = `<tr><td colspan="5" class="fin-empty">Nenhum gasto registrado neste mês.</td></tr>`;
       return;
     }
-    const sorted = [...payments].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
+    const sorted = [...list].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
     body.innerHTML = sorted.map(p => `
       <tr data-id="${p.id}">
         <td>${fmtDate(p.data)}</td>
@@ -1125,20 +1399,40 @@
     });
   }
 
-  function renderWithdrawalsTable(){
-    const body = $('withdrawalsBody');
-    if(withdrawals.length === 0){
-      body.innerHTML = `<tr><td colspan="4" class="fin-empty">Nenhum saque registrado ainda.</td></tr>`;
+  function renderSalesTable(){
+    const body = $('salesBody');
+    const list = sales.filter(s=> monthKey(s.data) === selectedMonth);
+    if(list.length === 0){
+      body.innerHTML = `<tr><td colspan="3" class="fin-empty">Nenhuma venda registrada neste mês.</td></tr>`;
       return;
     }
-    const n = PARTNERS.length || 1;
-    const sorted = [...withdrawals].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
+    const sorted = [...list].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
+    body.innerHTML = sorted.map(s => `
+      <tr data-id="${s.id}">
+        <td>${fmtDate(s.data)}</td>
+        <td>${s.quantidade}</td>
+        <td class="fin-amount">${fmtBRL(s.lucro)}</td>
+      </tr>
+    `).join('');
+    body.querySelectorAll('tr[data-id]').forEach(tr=>{
+      tr.addEventListener('click', ()=> openSaleModal(tr.dataset.id));
+    });
+  }
+
+  function renderWithdrawalsTable(){
+    const body = $('withdrawalsBody');
+    const list = withdrawals.filter(w=> monthKey(w.data) === selectedMonth);
+    if(list.length === 0){
+      body.innerHTML = `<tr><td colspan="4" class="fin-empty">Nenhum saque registrado neste mês.</td></tr>`;
+      return;
+    }
+    const sorted = [...list].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
     body.innerHTML = sorted.map(w => `
       <tr data-id="${w.id}">
         <td>${fmtDate(w.data)}</td>
         <td>${escapeHtml(w.descricao || '—')}</td>
         <td class="fin-amount">${fmtBRL(w.valor)}</td>
-        <td>${fmtBRL(w.valor / n)} cada</td>
+        <td>${escapeHtml(w.recebidoPor || '—')}</td>
       </tr>
     `).join('');
     body.querySelectorAll('tr[data-id]').forEach(tr=>{
@@ -1146,12 +1440,35 @@
     });
   }
 
-  /* ---------------- Financeiro: modal pagamento ---------------- */
+  function renderTransfersTable(){
+    const body = $('transfersBody');
+    const list = transfers.filter(t=> monthKey(t.data) === selectedMonth);
+    if(list.length === 0){
+      body.innerHTML = `<tr><td colspan="3" class="fin-empty">Nenhum repasse registrado neste mês.</td></tr>`;
+      return;
+    }
+    const sorted = [...list].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
+    body.innerHTML = sorted.map(t => `
+      <tr data-id="${t.id}">
+        <td>${fmtDate(t.data)}</td>
+        <td class="fin-amount">${fmtBRL(t.valor)}</td>
+        <td>${escapeHtml(t.enviadoPara)}</td>
+      </tr>
+    `).join('');
+    body.querySelectorAll('tr[data-id]').forEach(tr=>{
+      tr.addEventListener('click', ()=> openTransferModal(tr.dataset.id));
+    });
+  }
+
+  /* ---------------- Financeiro: selects compartilhados ---------------- */
   function populateFinanceiroSelects(){
     $('pInvestidoPor').innerHTML = PARTNERS.map(name=>`<option value="${name}">${name}</option>`).join('');
     $('categoriaList').innerHTML = CATEGORIES.map(c=>`<option value="${c}"></option>`).join('');
+    $('wConta').innerHTML = PARTNERS.map(name=>`<option value="${name}">${name}</option>`).join('');
+    $('tEnviadoPara').innerHTML = PARTNERS.map(name=>`<option value="${name}">${name}</option>`).join('');
   }
 
+  /* ---------------- Financeiro: modal gasto ---------------- */
   function openPaymentModal(id){
     editingPaymentId = id || null;
     $('paymentConfirmDelete').style.display = 'none';
@@ -1159,7 +1476,7 @@
 
     if(id){
       const p = payments.find(x=>x.id===id);
-      $('paymentModalTitle').textContent = 'Editar pagamento';
+      $('paymentModalTitle').textContent = 'Editar gasto';
       $('pData').value = p.data || '';
       $('pValor').value = p.valor ? String(p.valor).replace('.', ',') : '';
       $('pDescricao').value = p.descricao || '';
@@ -1167,8 +1484,8 @@
       $('pInvestidoPor').value = p.investidoPor || PARTNERS[0];
       $('paymentDeleteBtn').style.display = 'inline-flex';
     } else {
-      $('paymentModalTitle').textContent = 'Novo pagamento';
-      $('pData').value = '';
+      $('paymentModalTitle').textContent = 'Novo gasto';
+      $('pData').value = defaultDateForSelectedMonth();
       $('pValor').value = '';
       $('pDescricao').value = '';
       $('pCategoria').value = '';
@@ -1198,19 +1515,19 @@
     const investidoPor = $('pInvestidoPor').value;
     const id = editingPaymentId || uid('p');
 
-    const { error } = await sb.rpc('crm_upsert_payment', {
-      passcode: authPasscode, p_id: id, p_data: data, p_valor: valor,
-      p_descricao: descricao, p_categoria: categoria, p_investido_por: investidoPor,
+    const { error } = await sb.from('payments').upsert({
+      id, data, valor, descricao, categoria, investido_por: investidoPor,
+      updated_at: new Date().toISOString(),
     });
     if(error){ toast('Não foi possível salvar agora.'); return; }
 
     if(editingPaymentId){
       const p = payments.find(x=>x.id===editingPaymentId);
       Object.assign(p, { data, valor, descricao, categoria, investidoPor, updatedAt: Date.now() });
-      toast('Pagamento atualizado');
+      toast('Gasto atualizado');
     } else {
       payments.push({ id, data, valor, descricao, categoria, investidoPor, updatedAt: Date.now() });
-      toast('Pagamento adicionado');
+      toast('Gasto adicionado');
     }
     closePaymentModal();
     renderFinanceiro();
@@ -1221,32 +1538,91 @@
   });
   $('paymentConfirmDeleteNo').addEventListener('click', ()=> $('paymentConfirmDelete').style.display = 'none');
   $('paymentConfirmDeleteYes').addEventListener('click', async ()=>{
-    const { error } = await sb.rpc('crm_delete_payment', { passcode: authPasscode, p_id: editingPaymentId });
+    const { error } = await sb.from('payments').delete().eq('id', editingPaymentId);
     if(error){ toast('Não foi possível excluir agora.'); return; }
     payments = payments.filter(x=>x.id!==editingPaymentId);
     closePaymentModal();
     renderFinanceiro();
-    toast('Pagamento excluído');
+    toast('Gasto excluído');
   });
 
   $('addPaymentBtn').addEventListener('click', ()=> openPaymentModal(null));
 
-  /* ---------------- Financeiro: modal saque ---------------- */
-  function updateSplitPreview(){
-    const valor = parseCurrency($('wValor').value);
-    const n = PARTNERS.length || 1;
-    if(isNaN(valor) || valor <= 0){
-      $('wSplitPreview').textContent = '';
+  /* ---------------- Financeiro: modal venda ---------------- */
+  function openSaleModal(id){
+    editingSaleId = id || null;
+    $('saleConfirmDelete').style.display = 'none';
+
+    if(id){
+      const s = sales.find(x=>x.id===id);
+      $('saleModalTitle').textContent = 'Editar venda';
+      $('sData').value = s.data || '';
+      $('sQuantidade').value = s.quantidade || 1;
+      $('sLucro').value = s.lucro != null ? String(s.lucro).replace('.', ',') : '';
+      $('saleDeleteBtn').style.display = 'inline-flex';
+    } else {
+      $('saleModalTitle').textContent = 'Nova venda';
+      $('sData').value = defaultDateForSelectedMonth();
+      $('sQuantidade').value = 1;
+      $('sLucro').value = '';
+      $('saleDeleteBtn').style.display = 'none';
+    }
+    $('saleOverlay').classList.add('show');
+    setTimeout(()=>$('sData').focus(), 50);
+  }
+
+  function closeSaleModal(){
+    $('saleOverlay').classList.remove('show');
+    editingSaleId = null;
+  }
+  $('saleModalClose').addEventListener('click', closeSaleModal);
+  $('saleOverlay').addEventListener('click', (e)=>{ if(e.target.id==='saleOverlay') closeSaleModal(); });
+
+  $('saleSaveBtn').addEventListener('click', async ()=>{
+    const data = $('sData').value;
+    const quantidade = parseInt($('sQuantidade').value, 10);
+    const lucro = parseCurrency($('sLucro').value);
+    if(!data || !quantidade || quantidade < 1 || isNaN(lucro)){
+      toast('Preencha data, quantidade e lucro válidos.');
       return;
     }
-    const each = valor / n;
-    $('wSplitPreview').textContent = PARTNERS.map(name=> `${name}: ${fmtBRL(each)}`).join(' · ');
-  }
-  $('wValor').addEventListener('input', updateSplitPreview);
+    const id = editingSaleId || uid('s');
 
+    const { error } = await sb.from('sales').upsert({ id, data, quantidade, lucro });
+    if(error){ toast('Não foi possível salvar agora.'); return; }
+
+    if(editingSaleId){
+      const s = sales.find(x=>x.id===editingSaleId);
+      Object.assign(s, { data, quantidade, lucro });
+      toast('Venda atualizada');
+    } else {
+      sales.push({ id, data, quantidade, lucro });
+      toast('Venda adicionada');
+    }
+    closeSaleModal();
+    renderFinanceiro();
+  });
+
+  $('saleDeleteBtn').addEventListener('click', ()=>{
+    $('saleConfirmDelete').style.display = 'block';
+  });
+  $('saleConfirmDeleteNo').addEventListener('click', ()=> $('saleConfirmDelete').style.display = 'none');
+  $('saleConfirmDeleteYes').addEventListener('click', async ()=>{
+    const { error } = await sb.from('sales').delete().eq('id', editingSaleId);
+    if(error){ toast('Não foi possível excluir agora.'); return; }
+    sales = sales.filter(x=>x.id!==editingSaleId);
+    closeSaleModal();
+    renderFinanceiro();
+    toast('Venda excluída');
+  });
+
+  $('addSaleBtn').addEventListener('click', ()=> openSaleModal(null));
+
+  /* ---------------- Financeiro: modal saque ---------------- */
   function openWithdrawalModal(id){
     editingWithdrawalId = id || null;
     $('withdrawalConfirmDelete').style.display = 'none';
+    populateFinanceiroSelects();
 
     if(id){
       const w = withdrawals.find(x=>x.id===id);
@@ -1254,15 +1630,16 @@
       $('wData').value = w.data || '';
       $('wValor').value = w.valor ? String(w.valor).replace('.', ',') : '';
       $('wDescricao').value = w.descricao || '';
+      $('wConta').value = w.recebidoPor || PARTNERS[0];
       $('withdrawalDeleteBtn').style.display = 'inline-flex';
     } else {
       $('withdrawalModalTitle').textContent = 'Novo saque';
-      $('wData').value = '';
+      $('wData').value = defaultDateForSelectedMonth();
       $('wValor').value = '';
       $('wDescricao').value = '';
+      $('wConta').value = PARTNERS[0];
       $('withdrawalDeleteBtn').style.display = 'none';
     }
-    updateSplitPreview();
     $('withdrawalOverlay').classList.add('show');
     setTimeout(()=>$('wData').focus(), 50);
   }
@@ -1282,19 +1659,18 @@
       return;
     }
     const descricao = $('wDescricao').value.trim();
+    const recebidoPor = $('wConta').value;
     const id = editingWithdrawalId || uid('w');
 
-    const { error } = await sb.rpc('crm_upsert_withdrawal', {
-      passcode: authPasscode, p_id: id, p_data: data, p_valor: valor, p_descricao: descricao,
-    });
+    const { error } = await sb.from('withdrawals').upsert({ id, data, valor, descricao, recebido_por: recebidoPor });
     if(error){ toast('Não foi possível salvar agora.'); return; }
 
     if(editingWithdrawalId){
       const w = withdrawals.find(x=>x.id===editingWithdrawalId);
-      Object.assign(w, { data, valor, descricao });
+      Object.assign(w, { data, valor, descricao, recebidoPor });
       toast('Saque atualizado');
     } else {
-      withdrawals.push({ id, data, valor, descricao });
+      withdrawals.push({ id, data, valor, descricao, recebidoPor });
       toast('Saque adicionado');
     }
     closeWithdrawalModal();
@@ -1306,7 +1682,7 @@
   });
   $('withdrawalConfirmDeleteNo').addEventListener('click', ()=> $('withdrawalConfirmDelete').style.display = 'none');
   $('withdrawalConfirmDeleteYes').addEventListener('click', async ()=>{
-    const { error } = await sb.rpc('crm_delete_withdrawal', { passcode: authPasscode, p_id: editingWithdrawalId });
+    const { error } = await sb.from('withdrawals').delete().eq('id', editingWithdrawalId);
     if(error){ toast('Não foi possível excluir agora.'); return; }
     withdrawals = withdrawals.filter(x=>x.id!==editingWithdrawalId);
     closeWithdrawalModal();
@@ -1315,6 +1691,156 @@
   });
 
   $('addWithdrawalBtn').addEventListener('click', ()=> openWithdrawalModal(null));
+
+  /* ---------------- Financeiro: modal repasse ---------------- */
+  function openTransferModal(id){
+    editingTransferId = id || null;
+    $('transferConfirmDelete').style.display = 'none';
+    populateFinanceiroSelects();
+
+    if(id){
+      const t = transfers.find(x=>x.id===id);
+      $('transferModalTitle').textContent = 'Editar repasse';
+      $('tData').value = t.data || '';
+      $('tValor').value = t.valor ? String(t.valor).replace('.', ',') : '';
+      $('tEnviadoPara').value = t.enviadoPara || PARTNERS[0];
+      $('transferDeleteBtn').style.display = 'inline-flex';
+    } else {
+      $('transferModalTitle').textContent = 'Novo repasse';
+      $('tData').value = defaultDateForSelectedMonth();
+      $('tValor').value = '';
+      $('tEnviadoPara').value = PARTNERS[0];
+      $('transferDeleteBtn').style.display = 'none';
+    }
+    $('transferOverlay').classList.add('show');
+    setTimeout(()=>$('tData').focus(), 50);
+  }
+
+  function closeTransferModal(){
+    $('transferOverlay').classList.remove('show');
+    editingTransferId = null;
+  }
+  $('transferModalClose').addEventListener('click', closeTransferModal);
+  $('transferOverlay').addEventListener('click', (e)=>{ if(e.target.id==='transferOverlay') closeTransferModal(); });
+
+  $('transferSaveBtn').addEventListener('click', async ()=>{
+    const data = $('tData').value;
+    const valor = parseCurrency($('tValor').value);
+    if(!data || isNaN(valor) || valor <= 0){
+      toast('Preencha data e um valor válido.');
+      return;
+    }
+    const enviadoPara = $('tEnviadoPara').value;
+    const id = editingTransferId || uid('t');
+
+    const { error } = await sb.from('transfers').upsert({ id, data, valor, enviado_para: enviadoPara });
+    if(error){ toast('Não foi possível salvar agora.'); return; }
+
+    if(editingTransferId){
+      const t = transfers.find(x=>x.id===editingTransferId);
+      Object.assign(t, { data, valor, enviadoPara });
+      toast('Repasse atualizado');
+    } else {
+      transfers.push({ id, data, valor, enviadoPara });
+      toast('Repasse adicionado');
+    }
+    closeTransferModal();
+    renderFinanceiro();
+  });
+
+  $('transferDeleteBtn').addEventListener('click', ()=>{
+    $('transferConfirmDelete').style.display = 'block';
+  });
+  $('transferConfirmDeleteNo').addEventListener('click', ()=> $('transferConfirmDelete').style.display = 'none');
+  $('transferConfirmDeleteYes').addEventListener('click', async ()=>{
+    const { error } = await sb.from('transfers').delete().eq('id', editingTransferId);
+    if(error){ toast('Não foi possível excluir agora.'); return; }
+    transfers = transfers.filter(x=>x.id!==editingTransferId);
+    closeTransferModal();
+    renderFinanceiro();
+    toast('Repasse excluído');
+  });
+
+  $('addTransferBtn').addEventListener('click', ()=> openTransferModal(null));
+
+  /* ---------------- Marketing ---------------- */
+  function renderMarketing(){
+    if(!marketing) return;
+    $('mktLogoUrl').value = marketing.logoUrl || '';
+    $('mktLogoPreview').src = marketing.logoUrl || DEFAULT_LOGO_URL;
+    $('mktPersona').value = marketing.persona || '';
+    $('mktPublico').value = marketing.publicoAlvo || '';
+    $('mktTom').value = marketing.tomDeVoz || '';
+    $('mktPlano').value = marketing.plano || '';
+    renderMarketingColors();
+  }
+
+  function renderMarketingColors(){
+    const wrap = $('mktColors');
+    wrap.innerHTML = marketing.cores.map((c, i) => `
+      <div class="mkt-color-row" data-idx="${i}">
+        <input type="color" class="mkt-color-swatch" value="${escapeHtml(c.hex || '#B8936B')}">
+        <input type="text" class="mkt-color-label" placeholder="Nome da cor" value="${escapeHtml(c.label || '')}">
+        <input type="text" class="mkt-color-hex" placeholder="#B8936B" value="${escapeHtml(c.hex || '')}">
+        <button type="button" class="mkt-color-remove" title="Remover">✕</button>
+      </div>
+    `).join('');
+
+    wrap.querySelectorAll('.mkt-color-row').forEach(row=>{
+      const idx = parseInt(row.dataset.idx, 10);
+      const swatch = row.querySelector('.mkt-color-swatch');
+      const hexInput = row.querySelector('.mkt-color-hex');
+      const labelInput = row.querySelector('.mkt-color-label');
+      swatch.addEventListener('input', ()=>{
+        hexInput.value = swatch.value;
+        marketing.cores[idx].hex = swatch.value;
+      });
+      hexInput.addEventListener('input', ()=>{
+        marketing.cores[idx].hex = hexInput.value;
+        if(/^#[0-9a-fA-F]{6}$/.test(hexInput.value)) swatch.value = hexInput.value;
+      });
+      labelInput.addEventListener('input', ()=>{
+        marketing.cores[idx].label = labelInput.value;
+      });
+      row.querySelector('.mkt-color-remove').addEventListener('click', ()=>{
+        marketing.cores.splice(idx, 1);
+        renderMarketingColors();
+      });
+    });
+  }
+
+  $('addColorBtn').addEventListener('click', ()=>{
+    marketing.cores.push({ label:'', hex:'#B8936B' });
+    renderMarketingColors();
+  });
+
+  $('mktLogoUrl').addEventListener('input', (e)=>{
+    marketing.logoUrl = e.target.value;
+    $('mktLogoPreview').src = e.target.value || DEFAULT_LOGO_URL;
+  });
+
+  $('saveMarketingBtn').addEventListener('click', async ()=>{
+    marketing.persona = $('mktPersona').value.trim();
+    marketing.publicoAlvo = $('mktPublico').value.trim();
+    marketing.tomDeVoz = $('mktTom').value.trim();
+    marketing.plano = $('mktPlano').value.trim();
+    marketing.logoUrl = $('mktLogoUrl').value.trim() || DEFAULT_LOGO_URL;
+    marketing.cores = marketing.cores.filter(c=> c.label || c.hex);
+
+    const { error } = await sb.from('marketing').upsert({
+      id: 1,
+      persona: marketing.persona,
+      publico_alvo: marketing.publicoAlvo,
+      tom_de_voz: marketing.tomDeVoz,
+      logo_url: marketing.logoUrl,
+      cores: marketing.cores,
+      plano: marketing.plano,
+      updated_at: new Date().toISOString(),
+    });
+    if(error){ toast('Não foi possível salvar agora.'); return; }
+    renderMarketingColors();
+    toast('Guia de marketing salvo');
+  });
 
   /* ---------------- Init ---------------- */
   async function init(){
