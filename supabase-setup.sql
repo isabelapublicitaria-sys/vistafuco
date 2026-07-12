@@ -34,12 +34,16 @@ create table if not exists clients (
   stage text not null default 'potenciais',
   pet text,
   contato text,
+  origem text,
   data1 date,
   data_compra date,
   obs text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Se a tabela já existia (versão anterior sem "Origem"), adiciona a coluna.
+alter table clients add column if not exists origem text;
 
 create index if not exists clients_stage_idx on clients (stage);
 

@@ -20,6 +20,7 @@
     --blue:#7C93A8;
     --sage:#7C9A79;
     --plum:#9B7C9A;
+    --teal:#5C8A84;
     --danger:#B5533F;
     --shadow: 0 1px 2px rgba(43,33,24,0.06), 0 6px 20px rgba(43,33,24,0.06);
   }
@@ -573,6 +574,14 @@
           <input type="text" id="fContato" placeholder="(31) 9....">
         </div>
       </div>
+      <div class="field">
+        <label>Origem do cliente</label>
+        <select id="fOrigem">
+          <option value="">Selecione</option>
+          <option value="Instagram">Instagram</option>
+          <option value="WhatsApp">WhatsApp</option>
+        </select>
+      </div>
       <div class="row2">
         <div class="field">
           <label>Data da 1ª mensagem</label>
@@ -788,6 +797,7 @@
 
   const STAGES = [
     { id:'potenciais',   label:'Potenciais clientes',        color:'var(--rose)'  },
+    { id:'primeira_msg', label:'Primeira mensagem',           color:'var(--teal)'  },
     { id:'responderam',  label:'Responderam',                 color:'var(--ochre)' },
     { id:'conversa',     label:'Em conversa',                 color:'var(--blue)'  },
     { id:'comprou',      label:'Compraram',                   color:'var(--sage)'  },
@@ -862,6 +872,7 @@
       stage: r.stage,
       pet: r.pet || '',
       contato: r.contato || '',
+      origem: r.origem || '',
       data1: r.data1 || '',
       dataCompra: r.data_compra || '',
       obs: r.obs || '',
@@ -1097,6 +1108,7 @@
         card.dataset.id = c.id;
         let chips = '';
         if(c.pet) chips += `<span class="chip">🐾 ${escapeHtml(c.pet)}</span>`;
+        if(c.origem) chips += `<span class="chip">${c.origem === 'Instagram' ? '📷' : '💬'} ${escapeHtml(c.origem)}</span>`;
         if(c.data1) chips += `<span class="chip">1ª msg ${fmtDate(c.data1)}</span>`;
         if(c.dataCompra) chips += `<span class="chip">compra ${fmtDate(c.dataCompra)}</span>`;
         card.innerHTML = `
@@ -1139,6 +1151,7 @@
       $('fEtapa').value = c.stage;
       $('fPet').value = c.pet || '';
       $('fContato').value = c.contato || '';
+      $('fOrigem').value = c.origem || '';
       $('fData1').value = c.data1 || '';
       $('fDataCompra').value = c.dataCompra || '';
       $('fObs').value = c.obs || '';
@@ -1149,6 +1162,7 @@
       $('fEtapa').value = presetStage || STAGES[0].id;
       $('fPet').value = '';
       $('fContato').value = '';
+      $('fOrigem').value = '';
       $('fData1').value = '';
       $('fDataCompra').value = '';
       $('fObs').value = '';
@@ -1177,6 +1191,7 @@
       stage: $('fEtapa').value,
       pet: $('fPet').value.trim(),
       contato: $('fContato').value.trim(),
+      origem: $('fOrigem').value,
       data1: $('fData1').value || null,
       dataCompra: $('fDataCompra').value || null,
       obs: $('fObs').value.trim(),
@@ -1185,7 +1200,7 @@
 
     const { error } = await sb.from('clients').upsert({
       id, nome: payload.nome, stage: payload.stage, pet: payload.pet,
-      contato: payload.contato, data1: payload.data1, data_compra: payload.dataCompra,
+      contato: payload.contato, origem: payload.origem, data1: payload.data1, data_compra: payload.dataCompra,
       obs: payload.obs, updated_at: new Date().toISOString(),
     });
     if(error){ toast('Não foi possível salvar agora.'); return; }
@@ -1194,14 +1209,14 @@
       const c = clients.find(x=>x.id===editingId);
       Object.assign(c, {
         nome: payload.nome, stage: payload.stage, pet: payload.pet,
-        contato: payload.contato, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
+        contato: payload.contato, origem: payload.origem, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
         obs: payload.obs, updatedAt: Date.now(),
       });
       toast('Cliente atualizado');
     } else {
       clients.push({
         id, nome: payload.nome, stage: payload.stage, pet: payload.pet,
-        contato: payload.contato, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
+        contato: payload.contato, origem: payload.origem, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
         obs: payload.obs, createdAt: Date.now(), updatedAt: Date.now(),
       });
       toast('Cliente adicionado');
