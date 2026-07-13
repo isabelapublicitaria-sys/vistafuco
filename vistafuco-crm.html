@@ -160,6 +160,18 @@
   .btn-logout{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line);}
   .btn-logout:hover{color:var(--ink);border-color:var(--clay);}
 
+  .board-toolbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:14px 20px 0;
+  }
+  .board-toolbar label{font-size:12.5px; font-weight:600; color:var(--ink-soft);}
+  .board-toolbar select{
+    border:1.5px solid var(--line); background:var(--paper); border-radius:10px;
+    padding:7px 10px; font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px;
+    color:var(--ink); outline:none;
+  }
+  .board-toolbar select:focus{border-color:var(--clay);}
+
   .board{
     flex:1;
     display:flex;
@@ -427,6 +439,25 @@
       <button class="tab-btn active" data-tab="board">Quadro</button>
       <button class="tab-btn" data-tab="financeiro">Financeiro</button>
       <button class="tab-btn" data-tab="marketing">Marketing</button>
+    </div>
+
+    <div class="board-toolbar" id="boardToolbar">
+      <label for="boardOrigemFilter">Origem</label>
+      <select id="boardOrigemFilter">
+        <option value="">Todas as origens</option>
+        <option value="Instagram">Instagram</option>
+        <option value="WhatsApp">WhatsApp</option>
+        <option value="__none__">Sem origem</option>
+      </select>
+      <label for="boardSort">Ordenar por</label>
+      <select id="boardSort">
+        <option value="recent">Atualizado recentemente</option>
+        <option value="name_asc">Nome (A-Z)</option>
+        <option value="name_desc">Nome (Z-A)</option>
+        <option value="msg1_desc">1ª mensagem (mais recente)</option>
+        <option value="msg1_asc">1ª mensagem (mais antiga)</option>
+        <option value="compra_desc">Data da compra (mais recente)</option>
+      </select>
     </div>
 
     <div class="board" id="board"><!-- columns injected by JS --></div>
@@ -1028,6 +1059,7 @@
     $('financeiro').classList.toggle('active', tab === 'financeiro');
     $('marketing').classList.toggle('active', tab === 'marketing');
     $('board').style.display = tab === 'board' ? 'flex' : 'none';
+    $('boardToolbar').style.display = tab === 'board' ? '' : 'none';
     $('searchInput').parentElement.style.display = tab === 'board' ? '' : 'none';
     $('addClientBtn').style.display = tab === 'board' ? '' : 'none';
   });
@@ -1081,8 +1113,25 @@
     });
   }
 
+  const BOARD_SORTERS = {
+    recent:     (a,b)=> (b.updatedAt||0) - (a.updatedAt||0),
+    name_asc:   (a,b)=> (a.nome||'').localeCompare(b.nome||'', 'pt-BR'),
+    name_desc:  (a,b)=> (b.nome||'').localeCompare(a.nome||'', 'pt-BR'),
+    msg1_desc:  (a,b)=> (b.data1||'').localeCompare(a.data1||''),
+    msg1_asc:   (a,b)=> {
+      if(!a.data1 && !b.data1) return 0;
+      if(!a.data1) return 1;
+      if(!b.data1) return -1;
+      return a.data1.localeCompare(b.data1);
+    },
+    compra_desc:(a,b)=> (b.dataCompra||'').localeCompare(a.dataCompra||''),
+  };
+
   function renderBoard(filter){
-    const q = (filter||'').trim().toLowerCase();
+    const q = (filter!=null ? filter : $('searchInput').value || '').trim().toLowerCase();
+    const origemFilter = $('boardOrigemFilter').value;
+    const sortMode = $('boardSort').value;
+    const sorter = BOARD_SORTERS[sortMode] || BOARD_SORTERS.recent;
     STAGES.forEach(stage=>{
       const body = document.querySelector(`[data-body="${stage.id}"]`);
       const count = document.querySelector(`[data-count="${stage.id}"]`);
@@ -1094,13 +1143,16 @@
           (c.contato||'').toLowerCase().includes(q)
         );
       }
+      if(origemFilter){
+        list = list.filter(c => origemFilter === '__none__' ? !c.origem : c.origem === origemFilter);
+      }
       count.textContent = list.length;
       body.innerHTML = '';
       if(list.length === 0){
         body.innerHTML = `<div class="col-empty">Nenhum cliente aqui ainda.</div>`;
         return;
       }
-      list.sort((a,b)=> (b.updatedAt||0) - (a.updatedAt||0));
+      list.sort(sorter);
       list.forEach(c=>{
         const card = document.createElement('div');
         card.className = 'card';
@@ -1132,6 +1184,8 @@
   }
 
   $('searchInput').addEventListener('input', (e)=> renderBoard(e.target.value));
+  $('boardOrigemFilter').addEventListener('change', ()=> renderBoard());
+  $('boardSort').addEventListener('change', ()=> renderBoard());
 
   /* ---------------- Modal ---------------- */
   function populateStageSelect(){
