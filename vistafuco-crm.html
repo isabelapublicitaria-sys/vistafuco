@@ -492,6 +492,7 @@
             <tbody id="paymentsBody"></tbody>
           </table>
         </div>
+        <div class="fin-summary" id="gastosSplit" style="margin-top:12px; margin-bottom:0;"></div>
       </div>
 
       <div class="fin-section">
@@ -537,6 +538,7 @@
             <tbody id="transfersBody"></tbody>
           </table>
         </div>
+        <div class="fin-summary" id="repasseSplit" style="margin-top:12px; margin-bottom:0;"></div>
       </div>
     </div>
 
@@ -1430,9 +1432,11 @@
     renderFinSettle();
     renderCaixa();
     renderPaymentsTable();
+    renderGastosSplit();
     renderSalesTable();
     renderWithdrawalsTable();
     renderTransfersTable();
+    renderRepasseSplit();
   }
 
   function populateMonthSelect(){
@@ -1445,9 +1449,11 @@
     selectedMonth = e.target.value;
     renderCaixa();
     renderPaymentsTable();
+    renderGastosSplit();
     renderSalesTable();
     renderWithdrawalsTable();
     renderTransfersTable();
+    renderRepasseSplit();
   });
 
   function renderFinSettle(){
@@ -1494,6 +1500,39 @@
         <div class="fin-value ${cls}">${fmtBRL(fechamento)}</div>
       </div>
     `;
+  }
+
+  // Divisão dos Gastos só do mês selecionado (diferente do saldo entre
+  // sócias, que é sempre acumulado) — serve pra conferir rapidinho se o
+  // mês fechou equilibrado, sem misturar com saldo de meses anteriores.
+  function renderGastosSplit(){
+    const monthPayments = payments.filter(p=> monthKey(p.data) === selectedMonth);
+    const totalGastosMes = monthPayments.reduce((s,p)=> s + p.valor, 0);
+    const el = $('gastosSplit');
+
+    if(totalGastosMes <= 0){
+      el.innerHTML = `<div class="fin-card"><div class="fin-label">Divisão dos gastos do mês</div><div class="fin-sub">Nenhum gasto registrado neste mês.</div></div>`;
+      return;
+    }
+
+    const n = PARTNERS.length || 1;
+    const fairShareMes = totalGastosMes / n;
+    const paidByPartner = {};
+    PARTNERS.forEach(name=> paidByPartner[name] = 0);
+    monthPayments.forEach(p=>{
+      if(p.investidoPor in paidByPartner) paidByPartner[p.investidoPor] += p.valor;
+    });
+
+    el.innerHTML = PARTNERS.map(name=>{
+      const owed = Math.max(0, paidByPartner[name] - fairShareMes);
+      const cls = owed > 0.005 ? 'pos' : '';
+      return `
+        <div class="fin-card">
+          <div class="fin-label">Valor a ser pago a ${escapeHtml(name)}</div>
+          <div class="fin-value ${cls}">${fmtBRL(owed)}</div>
+        </div>
+      `;
+    }).join('');
   }
 
   function renderPaymentsTable(){
@@ -1578,6 +1617,54 @@
     body.querySelectorAll('tr[data-id]').forEach(tr=>{
       tr.addEventListener('click', ()=> openTransferModal(tr.dataset.id));
     });
+  }
+
+  // Quanto cada sócia deveria receber considerando só os lançamentos do
+  // mês selecionado (gastos + saques — vendas não entra nessa conta,
+  // só no saldo acumulado do topo) e quanto já foi efetivamente
+  // repassado nesse mês — a diferença é o que sobra pro mês seguinte
+  // (repasse marcado como "próximo mês").
+  function renderRepasseSplit(){
+    const monthPayments = payments.filter(p=> monthKey(p.data) === selectedMonth);
+    const monthWithdrawals = withdrawals.filter(w=> monthKey(w.data) === selectedMonth);
+    const monthTransfers = transfers.filter(t=> monthKey(t.data) === selectedMonth);
+
+    const totalGastos = monthPayments.reduce((s,p)=> s + p.valor, 0);
+    const totalSaques = monthWithdrawals.reduce((s,w)=> s + w.valor, 0);
+    const n = PARTNERS.length || 1;
+    const fairShareGastos = totalGastos / n;
+    const fairShareSaques = totalSaques / n;
+
+    const balance = {};
+    PARTNERS.forEach(name=> balance[name] = 0);
+    monthPayments.forEach(p=>{
+      if(p.investidoPor in balance) balance[p.investidoPor] += p.valor;
+    });
+    Object.keys(balance).forEach(name=>{ balance[name] += fairShareSaques - fairShareGastos; });
+    monthWithdrawals.forEach(w=>{
+      if(w.recebidoPor && w.recebidoPor in balance) balance[w.recebidoPor] -= w.valor;
+    });
+
+    const repassado = {};
+    PARTNERS.forEach(name=> repassado[name] = 0);
+    monthTransfers.forEach(t=>{
+      if(t.enviadoPara in repassado) repassado[t.enviadoPara] += t.valor;
+    });
+
+    const el = $('repasseSplit');
+    el.innerHTML = PARTNERS.map(name=>{
+      const deveriaReceber = Math.max(0, balance[name]);
+      return `
+        <div class="fin-card">
+          <div class="fin-label">Valor que ${escapeHtml(name)} deveria receber</div>
+          <div class="fin-value ${deveriaReceber > 0.005 ? 'pos' : ''}">${fmtBRL(deveriaReceber)}</div>
+        </div>
+        <div class="fin-card">
+          <div class="fin-label">Repassado para ${escapeHtml(name)}</div>
+          <div class="fin-value">${fmtBRL(repassado[name])}</div>
+        </div>
+      `;
+    }).join('');
   }
 
   /* ---------------- Financeiro: selects compartilhados ---------------- */
