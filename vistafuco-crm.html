@@ -532,7 +532,7 @@
         <div class="fin-table-scroll">
           <table class="fin-table">
             <thead>
-              <tr><th>Data</th><th>Valor</th><th>Enviado para</th></tr>
+              <tr><th>Data</th><th>Valor</th><th>Enviado para</th><th>Tipo</th></tr>
             </thead>
             <tbody id="transfersBody"></tbody>
           </table>
@@ -807,6 +807,13 @@
         <label>Enviado para <span class="req">*</span></label>
         <select id="tEnviadoPara"></select>
       </div>
+      <div class="field">
+        <label>Tipo <span class="req">*</span></label>
+        <select id="tTipo">
+          <option value="enviado">Saldo enviado</option>
+          <option value="proximo_mes">Saldo para o próximo mês</option>
+        </select>
+      </div>
 
       <div class="modal-actions">
         <button class="btn btn-delete" id="transferDeleteBtn" style="display:none;">Excluir</button>
@@ -964,8 +971,10 @@
       data: r.data || '',
       valor: Number(r.valor) || 0,
       enviadoPara: r.enviado_para || '',
+      tipo: r.tipo || 'enviado',
     };
   }
+  const TRANSFER_TIPO_LABEL = { enviado: 'Saldo enviado', proximo_mes: 'Saldo para o próximo mês' };
 
   async function loadPayments(){
     const { data, error } = await sb.from('payments').select('*');
@@ -1353,9 +1362,16 @@
   function computeBalances(){
     const totalGastos = payments.reduce((s,p)=> s + p.valor, 0);
     const totalLucro = sales.reduce((s,x)=> s + x.lucro, 0);
+    const totalSaques = withdrawals.reduce((s,w)=> s + w.valor, 0);
     const n = PARTNERS.length || 1;
     const fairShareGastos = totalGastos / n;
     const fairShareLucro = totalLucro / n;
+    // Saque tira dinheiro do caixa comum pra conta pessoal de UMA sócia,
+    // mas o valor sacado é de ambas por direito — por isso cada sócia é
+    // creditada na sua cota-parte aqui, e só quem sacou é debitada do
+    // valor cheio abaixo. Sem essa cota, uma sócia sacar sem nenhuma
+    // outra dívida pendente não geraria repasse sugerido nenhum.
+    const fairShareSaques = totalSaques / n;
 
     const balance = {};
     PARTNERS.forEach(name=> balance[name] = 0);
@@ -1364,7 +1380,7 @@
       if(!(p.investidoPor in balance)) balance[p.investidoPor] = 0;
       balance[p.investidoPor] += p.valor;
     });
-    Object.keys(balance).forEach(name=>{ balance[name] += fairShareLucro - fairShareGastos; });
+    Object.keys(balance).forEach(name=>{ balance[name] += fairShareLucro - fairShareGastos + fairShareSaques; });
 
     withdrawals.forEach(w=>{
       if(w.recebidoPor && w.recebidoPor in balance) balance[w.recebidoPor] -= w.valor;
@@ -1372,8 +1388,12 @@
 
     // Repasse = pix direto entre as duas sócias (não vem do caixa da
     // empresa). Quem recebe abate do saldo; quem enviou (a outra sócia,
-    // já que só existem duas) ganha esse valor de volta.
+    // já que só existem duas) ganha esse valor de volta. Repasse marcado
+    // como "próximo mês" ainda não foi enviado de fato — fica registrado
+    // pra não esquecer, mas não abate o saldo; a dívida continua
+    // acumulando até juntar com o mês seguinte e ser quitada de verdade.
     transfers.forEach(t=>{
+      if(t.tipo === 'proximo_mes') return;
       if(t.enviadoPara in balance) balance[t.enviadoPara] -= t.valor;
       const sender = PARTNERS.find(name=> name !== t.enviadoPara);
       if(sender && sender in balance) balance[sender] += t.valor;
@@ -1435,14 +1455,20 @@
     const settlements = computeSettlements(balance);
     const el = $('finSettle');
     const hasAnyData = payments.length || sales.length || withdrawals.length || transfers.length;
+
+    const pending = transfers.filter(t=> t.tipo === 'proximo_mes');
+    const pendingNote = pending.length
+      ? `<div class="fin-sub" style="margin-top:6px;">Repasse ainda não enviado, somando com o próximo mês: ${pending.map(t=> `${fmtBRL(t.valor)} para ${escapeHtml(t.enviadoPara)}`).join(', ')}.</div>`
+      : '';
+
     if(!hasAnyData){
       el.innerHTML = 'Nenhum lançamento ainda. O saldo entre sócias aparece aqui conforme vocês forem cadastrando gastos, vendas, saques e repasses.';
     } else if(settlements.length === 0){
-      el.innerHTML = '<span class="fin-settle-ok">Contas equilibradas — ninguém deve nada no momento.</span>';
+      el.innerHTML = '<span class="fin-settle-ok">Contas equilibradas — ninguém deve nada no momento.</span>' + pendingNote;
     } else {
       el.innerHTML = settlements.map(t=>
         `<div><strong>${escapeHtml(t.from)}</strong> deve pagar <strong>${fmtBRL(t.amount)}</strong> para <strong>${escapeHtml(t.to)}</strong></div>`
-      ).join('') + '<div class="fin-sub" style="margin-top:6px;">Saldo acumulado de todos os meses — some gastos, vendas, saques e repasses até hoje.</div>';
+      ).join('') + '<div class="fin-sub" style="margin-top:6px;">Saldo acumulado de todos os meses — some gastos, vendas, saques e repasses até hoje.</div>' + pendingNote;
     }
   }
 
@@ -1537,7 +1563,7 @@
     const body = $('transfersBody');
     const list = transfers.filter(t=> monthKey(t.data) === selectedMonth);
     if(list.length === 0){
-      body.innerHTML = `<tr><td colspan="3" class="fin-empty">Nenhum repasse registrado neste mês.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="4" class="fin-empty">Nenhum repasse registrado neste mês.</td></tr>`;
       return;
     }
     const sorted = [...list].sort((a,b)=> (b.data||'').localeCompare(a.data||''));
@@ -1546,6 +1572,7 @@
         <td>${fmtDate(t.data)}</td>
         <td class="fin-amount">${fmtBRL(t.valor)}</td>
         <td>${escapeHtml(t.enviadoPara)}</td>
+        <td>${escapeHtml(TRANSFER_TIPO_LABEL[t.tipo] || TRANSFER_TIPO_LABEL.enviado)}</td>
       </tr>
     `).join('');
     body.querySelectorAll('tr[data-id]').forEach(tr=>{
@@ -1797,12 +1824,14 @@
       $('tData').value = t.data || '';
       $('tValor').value = t.valor ? String(t.valor).replace('.', ',') : '';
       $('tEnviadoPara').value = t.enviadoPara || PARTNERS[0];
+      $('tTipo').value = t.tipo || 'enviado';
       $('transferDeleteBtn').style.display = 'inline-flex';
     } else {
       $('transferModalTitle').textContent = 'Novo repasse';
       $('tData').value = defaultDateForSelectedMonth();
       $('tValor').value = '';
       $('tEnviadoPara').value = PARTNERS[0];
+      $('tTipo').value = 'enviado';
       $('transferDeleteBtn').style.display = 'none';
     }
     $('transferOverlay').classList.add('show');
@@ -1824,17 +1853,18 @@
       return;
     }
     const enviadoPara = $('tEnviadoPara').value;
+    const tipo = $('tTipo').value;
     const id = editingTransferId || uid('t');
 
-    const { error } = await sb.from('transfers').upsert({ id, data, valor, enviado_para: enviadoPara });
+    const { error } = await sb.from('transfers').upsert({ id, data, valor, enviado_para: enviadoPara, tipo });
     if(error){ toast('Não foi possível salvar agora.'); return; }
 
     if(editingTransferId){
       const t = transfers.find(x=>x.id===editingTransferId);
-      Object.assign(t, { data, valor, enviadoPara });
+      Object.assign(t, { data, valor, enviadoPara, tipo });
       toast('Repasse atualizado');
     } else {
-      transfers.push({ id, data, valor, enviadoPara });
+      transfers.push({ id, data, valor, enviadoPara, tipo });
       toast('Repasse adicionado');
     }
     closeTransferModal();

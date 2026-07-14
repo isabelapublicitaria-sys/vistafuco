@@ -90,8 +90,11 @@ create table if not exists transfers (
   valor numeric(12,2) not null,
   enviado_para text not null,
   descricao text,
+  tipo text not null default 'enviado',
   created_at timestamptz not null default now()
 );
+
+alter table transfers add column if not exists tipo text not null default 'enviado';
 
 create index if not exists transfers_data_idx on transfers (data);
 
