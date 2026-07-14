@@ -238,7 +238,15 @@
   }
   .card:active{cursor:grabbing;}
   .card.dragging{opacity:0.4;}
-  .card-name{font-weight:700;font-size:13.5px;margin:0 0 4px;}
+  .card-top{display:flex;align-items:flex-start;gap:6px;}
+  .card-name{font-weight:700;font-size:13.5px;margin:0 0 4px;flex:1;}
+  .card-delete{
+    flex:none;background:none;border:none;cursor:pointer;
+    font-size:12px;line-height:1;padding:2px 4px;border-radius:6px;
+    color:var(--ink-soft);opacity:0;transition:opacity .12s ease,color .12s ease,background .12s ease;
+  }
+  .card:hover .card-delete{opacity:1;}
+  .card-delete:hover{color:var(--danger);background:#FBEAE6;}
   .card-meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;}
   .chip{
     font-size:10.5px;font-weight:600;
@@ -1164,11 +1172,19 @@
         if(c.data1) chips += `<span class="chip">1ª msg ${fmtDate(c.data1)}</span>`;
         if(c.dataCompra) chips += `<span class="chip">compra ${fmtDate(c.dataCompra)}</span>`;
         card.innerHTML = `
-          <p class="card-name">${escapeHtml(c.nome)}</p>
+          <div class="card-top">
+            <p class="card-name">${escapeHtml(c.nome)}</p>
+            <button type="button" class="card-delete" title="Excluir cliente" aria-label="Excluir cliente">🗑</button>
+          </div>
           <div class="card-meta">${chips}</div>
           ${c.obs ? `<p class="card-notes">${escapeHtml(c.obs)}</p>` : ''}
         `;
         card.addEventListener('click', ()=> openModal(c.id));
+        card.querySelector('.card-delete').addEventListener('click', (e)=>{
+          e.stopPropagation();
+          openModal(c.id);
+          $('confirmDelete').style.display = 'block';
+        });
         card.addEventListener('dragstart', ()=>{
           draggedId = c.id;
           card.classList.add('dragging');
@@ -1233,50 +1249,59 @@
   $('modalClose').addEventListener('click', closeModal);
   $('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
 
+  let savingClient = false;
   $('saveBtn').addEventListener('click', async ()=>{
+    if(savingClient) return;
     const nome = $('fNome').value.trim();
     if(!nome){
       $('fNome').style.borderColor = 'var(--danger)';
       $('fNome').focus();
       return;
     }
-    const payload = {
-      nome,
-      stage: $('fEtapa').value,
-      pet: $('fPet').value.trim(),
-      contato: $('fContato').value.trim(),
-      origem: $('fOrigem').value,
-      data1: $('fData1').value || null,
-      dataCompra: $('fDataCompra').value || null,
-      obs: $('fObs').value.trim(),
-    };
-    const id = editingId || uid();
+    savingClient = true;
+    $('saveBtn').disabled = true;
+    try {
+      const payload = {
+        nome,
+        stage: $('fEtapa').value,
+        pet: $('fPet').value.trim(),
+        contato: $('fContato').value.trim(),
+        origem: $('fOrigem').value,
+        data1: $('fData1').value || null,
+        dataCompra: $('fDataCompra').value || null,
+        obs: $('fObs').value.trim(),
+      };
+      const id = editingId || uid();
 
-    const { error } = await sb.from('clients').upsert({
-      id, nome: payload.nome, stage: payload.stage, pet: payload.pet,
-      contato: payload.contato, origem: payload.origem, data1: payload.data1, data_compra: payload.dataCompra,
-      obs: payload.obs, updated_at: new Date().toISOString(),
-    });
-    if(error){ toast('Não foi possível salvar agora.'); return; }
-
-    if(editingId){
-      const c = clients.find(x=>x.id===editingId);
-      Object.assign(c, {
-        nome: payload.nome, stage: payload.stage, pet: payload.pet,
-        contato: payload.contato, origem: payload.origem, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
-        obs: payload.obs, updatedAt: Date.now(),
-      });
-      toast('Cliente atualizado');
-    } else {
-      clients.push({
+      const { error } = await sb.from('clients').upsert({
         id, nome: payload.nome, stage: payload.stage, pet: payload.pet,
-        contato: payload.contato, origem: payload.origem, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
-        obs: payload.obs, createdAt: Date.now(), updatedAt: Date.now(),
+        contato: payload.contato, origem: payload.origem, data1: payload.data1, data_compra: payload.dataCompra,
+        obs: payload.obs, updated_at: new Date().toISOString(),
       });
-      toast('Cliente adicionado');
+      if(error){ toast('Não foi possível salvar agora.'); return; }
+
+      if(editingId){
+        const c = clients.find(x=>x.id===editingId);
+        Object.assign(c, {
+          nome: payload.nome, stage: payload.stage, pet: payload.pet,
+          contato: payload.contato, origem: payload.origem, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
+          obs: payload.obs, updatedAt: Date.now(),
+        });
+        toast('Cliente atualizado');
+      } else {
+        clients.push({
+          id, nome: payload.nome, stage: payload.stage, pet: payload.pet,
+          contato: payload.contato, origem: payload.origem, data1: payload.data1 || '', dataCompra: payload.dataCompra || '',
+          obs: payload.obs, createdAt: Date.now(), updatedAt: Date.now(),
+        });
+        toast('Cliente adicionado');
+      }
+      closeModal();
+      renderBoard($('searchInput').value);
+    } finally {
+      savingClient = false;
+      $('saveBtn').disabled = false;
     }
-    closeModal();
-    renderBoard($('searchInput').value);
   });
 
   $('fNome').addEventListener('input', ()=> $('fNome').style.borderColor = '');
