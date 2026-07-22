@@ -1472,9 +1472,16 @@
     } else if(settlements.length === 0){
       el.innerHTML = '<span class="fin-settle-ok">Contas equilibradas — ninguém deve nada no momento.</span>' + pendingNote;
     } else {
+      const allKeys = [];
+      payments.forEach(p=> p.data && allKeys.push(monthKey(p.data)));
+      sales.forEach(s=> s.data && allKeys.push(monthKey(s.data)));
+      withdrawals.forEach(w=> w.data && allKeys.push(monthKey(w.data)));
+      transfers.forEach(t=> t.data && allKeys.push(monthKey(t.data)));
+      const earliestKey = allKeys.length ? allKeys.sort()[0] : null;
+      const sinceNote = earliestKey ? ` desde ${monthLabel(earliestKey)}` : '';
       el.innerHTML = settlements.map(t=>
         `<div><strong>${escapeHtml(t.from)}</strong> deve pagar <strong>${fmtBRL(t.amount)}</strong> para <strong>${escapeHtml(t.to)}</strong></div>`
-      ).join('') + '<div class="fin-sub" style="margin-top:6px;">Saldo acumulado de todos os meses — some gastos, vendas, saques e repasses até hoje.</div>' + pendingNote;
+      ).join('') + `<div class="fin-sub" style="margin-top:6px;">Saldo acumulado de todos os meses${sinceNote} — soma gastos, vendas, saques e repasses até hoje.</div>` + pendingNote;
     }
   }
 
@@ -1527,6 +1534,10 @@
       const owed = Math.max(0, paidByPartner[name] - fairShareMes);
       const cls = owed > 0.005 ? 'pos' : '';
       return `
+        <div class="fin-card">
+          <div class="fin-label">${escapeHtml(name)} pagou</div>
+          <div class="fin-value">${fmtBRL(paidByPartner[name])}</div>
+        </div>
         <div class="fin-card">
           <div class="fin-label">Valor a ser pago a ${escapeHtml(name)}</div>
           <div class="fin-value ${cls}">${fmtBRL(owed)}</div>
@@ -1635,14 +1646,27 @@
     const fairShareGastos = totalGastos / n;
     const fairShareSaques = totalSaques / n;
 
-    const balance = {};
-    PARTNERS.forEach(name=> balance[name] = 0);
+    const paidByPartner = {};
+    const withdrawnByPartner = {};
+    PARTNERS.forEach(name=>{ paidByPartner[name] = 0; withdrawnByPartner[name] = 0; });
     monthPayments.forEach(p=>{
-      if(p.investidoPor in balance) balance[p.investidoPor] += p.valor;
+      if(p.investidoPor in paidByPartner) paidByPartner[p.investidoPor] += p.valor;
     });
-    Object.keys(balance).forEach(name=>{ balance[name] += fairShareSaques - fairShareGastos; });
     monthWithdrawals.forEach(w=>{
-      if(w.recebidoPor && w.recebidoPor in balance) balance[w.recebidoPor] -= w.valor;
+      if(w.recebidoPor && w.recebidoPor in withdrawnByPartner) withdrawnByPartner[w.recebidoPor] += w.valor;
+    });
+
+    // Decomposto em duas partes pra ficar visível de onde vem o valor final:
+    // gastosPart = quanto essa sócia pagou a mais/a menos que a parte justa
+    // dos gastos; saquesPart = quanto ela ainda tem a receber/a devolver
+    // da parte justa do saque, dado o que ela já sacou pra própria conta.
+    const gastosPart = {};
+    const saquesPart = {};
+    const balance = {};
+    PARTNERS.forEach(name=>{
+      gastosPart[name] = paidByPartner[name] - fairShareGastos;
+      saquesPart[name] = fairShareSaques - withdrawnByPartner[name];
+      balance[name] = gastosPart[name] + saquesPart[name];
     });
 
     const repassado = {};
@@ -1651,13 +1675,19 @@
       if(t.enviadoPara in repassado) repassado[t.enviadoPara] += t.valor;
     });
 
+    const fmtSigned = v => (v >= -0.005 ? '+ ' : '− ') + fmtBRL(Math.abs(v));
+
     const el = $('repasseSplit');
     el.innerHTML = PARTNERS.map(name=>{
       const deveriaReceber = Math.max(0, balance[name]);
+      const breakdown = (totalGastos > 0 || totalSaques > 0)
+        ? `<div class="fin-sub">Gastos: ${fmtSigned(gastosPart[name])} &nbsp;·&nbsp; Saque: ${fmtSigned(saquesPart[name])}</div>`
+        : '';
       return `
         <div class="fin-card">
           <div class="fin-label">Valor que ${escapeHtml(name)} deveria receber</div>
           <div class="fin-value ${deveriaReceber > 0.005 ? 'pos' : ''}">${fmtBRL(deveriaReceber)}</div>
+          ${breakdown}
         </div>
         <div class="fin-card">
           <div class="fin-label">Repassado para ${escapeHtml(name)}</div>
