@@ -98,6 +98,17 @@ alter table transfers add column if not exists tipo text not null default 'envia
 
 create index if not exists transfers_data_idx on transfers (data);
 
+-- Saldo pro próximo mês da aba "Visão geral" — ajustado manualmente por
+-- Isabela/Mariane (não é recalculado sozinho), porque o histórico de
+-- repasses mistura acerto de gastos+saque com outras coisas (repasse de
+-- lucro, etc.) que uma fórmula fixa não consegue separar com certeza.
+create table if not exists monthly_balances (
+  id text primary key,
+  saldo_isabela numeric(12,2) not null default 0,
+  saldo_mariane numeric(12,2) not null default 0,
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists marketing (
   id integer primary key default 1,
   persona text,
@@ -115,6 +126,7 @@ alter table payments enable row level security;
 alter table withdrawals enable row level security;
 alter table sales enable row level security;
 alter table transfers enable row level security;
+alter table monthly_balances enable row level security;
 alter table marketing enable row level security;
 
 drop policy if exists "authenticated full access - clients" on clients;
@@ -122,6 +134,7 @@ drop policy if exists "authenticated full access - payments" on payments;
 drop policy if exists "authenticated full access - withdrawals" on withdrawals;
 drop policy if exists "authenticated full access - sales" on sales;
 drop policy if exists "authenticated full access - transfers" on transfers;
+drop policy if exists "authenticated full access - monthly_balances" on monthly_balances;
 
 create policy "authenticated full access - clients" on clients
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
@@ -138,9 +151,12 @@ create policy "authenticated full access - sales" on sales
 create policy "authenticated full access - transfers" on transfers
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
+create policy "authenticated full access - monthly_balances" on monthly_balances
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+
 drop policy if exists "authenticated full access - marketing" on marketing;
 create policy "authenticated full access - marketing" on marketing
   for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
-grant select, insert, update, delete on clients, payments, withdrawals, sales, transfers, marketing to authenticated;
-revoke all on clients, payments, withdrawals, sales, transfers, marketing from anon;
+grant select, insert, update, delete on clients, payments, withdrawals, sales, transfers, monthly_balances, marketing to authenticated;
+revoke all on clients, payments, withdrawals, sales, transfers, monthly_balances, marketing from anon;
