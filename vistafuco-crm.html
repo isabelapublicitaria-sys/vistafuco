@@ -314,8 +314,6 @@
   /* ---------- Financeiro ---------- */
   .financeiro{flex:1; display:none; overflow-y:auto; padding:18px 20px 30px;}
   .financeiro.active{display:block;}
-  .visaogeral{flex:1; display:none; overflow-y:auto; padding:18px 20px 30px;}
-  .visaogeral.active{display:block;}
   .fin-month-bar{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
   .fin-month-bar label{font-size:12.5px; font-weight:600; color:var(--ink-soft);}
   .fin-month-bar select{
@@ -356,16 +354,6 @@
   .fin-table tbody tr:last-child td{border-bottom:none;}
   .fin-amount{font-weight:700;}
   .fin-empty{font-size:12.5px; color:var(--ink-soft); text-align:center; padding:20px 10px;}
-  .vg-repasse-item{cursor:pointer; text-decoration:underline dotted; text-underline-offset:2px;}
-  .vg-repasse-item:hover{color:var(--clay-deep);}
-  .vg-repasse-add{cursor:pointer; font-size:11px; color:var(--ink-soft);}
-  .vg-repasse-add:hover{color:var(--clay-deep);}
-  .vg-carry-input{
-    width:90px; border:1.5px solid var(--line); background:var(--cream);
-    border-radius:8px; padding:5px 8px; font-family:'Inter',sans-serif;
-    font-size:13px; color:var(--ink); outline:none; transition:border-color .15s ease;
-  }
-  .vg-carry-input:focus{border-color:var(--clay);}
   .fin-split-preview{background:var(--cream); border-radius:10px; padding:10px 12px; font-size:12.5px; color:var(--ink-soft); margin:2px 0 4px; line-height:1.6;}
 
   /* ---------- Marketing ---------- */
@@ -457,7 +445,6 @@
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="board">Quadro</button>
       <button class="tab-btn" data-tab="financeiro">Financeiro</button>
-      <button class="tab-btn" data-tab="visaogeral">Visão geral</button>
       <button class="tab-btn" data-tab="marketing">Marketing</button>
     </div>
 
@@ -552,35 +539,6 @@
           </table>
         </div>
         <div class="fin-summary" id="repasseSplit" style="margin-top:12px; margin-bottom:0;"></div>
-      </div>
-    </div>
-
-    <div class="visaogeral" id="visaogeral">
-      <div class="fin-section">
-        <div class="fin-section-head">
-          <h2>Visão geral por mês</h2>
-        </div>
-        <div class="fin-table-scroll">
-          <table class="fin-table">
-            <thead>
-              <tr>
-                <th>Mês</th>
-                <th>Gastos Mariane</th>
-                <th>Gastos Isabela</th>
-                <th>Repassado dos gastos — Isabela</th>
-                <th>Repassado dos gastos — Mariane</th>
-                <th>Saldo do mês — Isabela</th>
-                <th>Saldo do mês — Mariane</th>
-                <th>Pix</th>
-                <th>Saldo p/ próximo mês — Isabela</th>
-                <th>Saldo p/ próximo mês — Mariane</th>
-                <th>Saque</th>
-                <th>Lucro</th>
-              </tr>
-            </thead>
-            <tbody id="visaoGeralBody"></tbody>
-          </table>
-        </div>
       </div>
     </div>
 
@@ -905,7 +863,6 @@
   let withdrawals = [];
   let sales = [];
   let transfers = [];
-  let monthlyBalances = [];
   let editingPaymentId = null;
   let editingWithdrawalId = null;
   let editingSaleId = null;
@@ -1042,28 +999,6 @@
     transfers = (data || []).map(rowToTransfer);
   }
 
-  function rowToMonthlyBalance(r){
-    return {
-      mk: r.id,
-      saldoIsabela: Number(r.saldo_isabela) || 0,
-      saldoMariane: Number(r.saldo_mariane) || 0,
-    };
-  }
-  async function loadMonthlyBalances(){
-    const { data, error } = await sb.from('monthly_balances').select('*');
-    if(error){ monthlyBalances = []; toast('Não foi possível carregar o saldo da visão geral.'); return; }
-    monthlyBalances = (data || []).map(rowToMonthlyBalance);
-  }
-  async function saveMonthlyBalance(mk, saldoIsabela, saldoMariane){
-    const { error } = await sb.from('monthly_balances').upsert({
-      id: mk, saldo_isabela: saldoIsabela, saldo_mariane: saldoMariane,
-    });
-    if(error){ toast('Não foi possível salvar o saldo agora.'); return; }
-    const existing = monthlyBalances.find(m=> m.mk === mk);
-    if(existing) Object.assign(existing, { saldoIsabela, saldoMariane });
-    else monthlyBalances.push({ mk, saldoIsabela, saldoMariane });
-  }
-
   async function loadMarketing(){
     const { data, error } = await sb.from('marketing').select('*').eq('id', 1).maybeSingle();
     if(error || !data){
@@ -1118,7 +1053,6 @@
     await loadWithdrawals();
     await loadSales();
     await loadTransfers();
-    await loadMonthlyBalances();
     await loadMarketing();
     renderBoard();
     renderFinanceiro();
@@ -1141,7 +1075,6 @@
     document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b===btn));
     const tab = btn.dataset.tab;
     $('financeiro').classList.toggle('active', tab === 'financeiro');
-    $('visaogeral').classList.toggle('active', tab === 'visaogeral');
     $('marketing').classList.toggle('active', tab === 'marketing');
     $('board').style.display = tab === 'board' ? 'flex' : 'none';
     $('boardToolbar').style.display = tab === 'board' ? '' : 'none';
@@ -1425,52 +1358,9 @@
     return selectedMonth + '-01';
   }
 
-  // Saldo acumulado entre sócias: soma todo o histórico (não só o mês
-  // selecionado), por isso o valor pendente carrega automaticamente de
-  // um mês pro outro até ser quitado com um repasse.
-  function computeBalances(){
-    const totalGastos = payments.reduce((s,p)=> s + p.valor, 0);
-    const totalLucro = sales.reduce((s,x)=> s + x.lucro, 0);
-    const totalSaques = withdrawals.reduce((s,w)=> s + w.valor, 0);
-    const n = PARTNERS.length || 1;
-    const fairShareGastos = totalGastos / n;
-    const fairShareLucro = totalLucro / n;
-    // Saque tira dinheiro do caixa comum pra conta pessoal de UMA sócia,
-    // mas o valor sacado é de ambas por direito — por isso cada sócia é
-    // creditada na sua cota-parte aqui, e só quem sacou é debitada do
-    // valor cheio abaixo. Sem essa cota, uma sócia sacar sem nenhuma
-    // outra dívida pendente não geraria repasse sugerido nenhum.
-    const fairShareSaques = totalSaques / n;
-
-    const balance = {};
-    PARTNERS.forEach(name=> balance[name] = 0);
-
-    payments.forEach(p=>{
-      if(!(p.investidoPor in balance)) balance[p.investidoPor] = 0;
-      balance[p.investidoPor] += p.valor;
-    });
-    Object.keys(balance).forEach(name=>{ balance[name] += fairShareLucro - fairShareGastos + fairShareSaques; });
-
-    withdrawals.forEach(w=>{
-      if(w.recebidoPor && w.recebidoPor in balance) balance[w.recebidoPor] -= w.valor;
-    });
-
-    // Repasse = pix direto entre as duas sócias (não vem do caixa da
-    // empresa). Quem recebe abate do saldo; quem enviou (a outra sócia,
-    // já que só existem duas) ganha esse valor de volta. Repasse marcado
-    // como "próximo mês" ainda não foi enviado de fato — fica registrado
-    // pra não esquecer, mas não abate o saldo; a dívida continua
-    // acumulando até juntar com o mês seguinte e ser quitada de verdade.
-    transfers.forEach(t=>{
-      if(t.tipo === 'proximo_mes') return;
-      if(t.enviadoPara in balance) balance[t.enviadoPara] -= t.valor;
-      const sender = PARTNERS.find(name=> name !== t.enviadoPara);
-      if(sender && sender in balance) balance[sender] += t.valor;
-    });
-
-    return { totalGastos, totalLucro, fairShareGastos, fairShareLucro, balance };
-  }
-
+  // Generic greedy debtor/creditor matcher — reuse this rather than
+  // writing new settlement logic if a similar "who owes whom" view is
+  // needed. Not partner-count-specific.
   function computeSettlements(balance){
     const creditors = [];
     const debtors = [];
@@ -1504,7 +1394,6 @@
     renderWithdrawalsTable();
     renderTransfersTable();
     renderRepasseSplit();
-    renderVisaoGeral();
   }
 
   function populateMonthSelect(){
@@ -1524,32 +1413,25 @@
     renderRepasseSplit();
   });
 
+  // Não tenta somar tudo desde o início automaticamente — o histórico de
+  // repasses mistura acerto de gastos+saque com outras coisas (repasse
+  // de lucro etc.) que uma fórmula fixa não consegue separar direito.
+  // Em vez disso, mostra só os repasses marcados como "próximo mês"
+  // (dado que a própria sócia lançou e confirmou, confiável).
   function renderFinSettle(){
-    const { balance } = computeBalances();
-    const settlements = computeSettlements(balance);
     const el = $('finSettle');
     const hasAnyData = payments.length || sales.length || withdrawals.length || transfers.length;
-
     const pending = transfers.filter(t=> t.tipo === 'proximo_mes');
-    const pendingNote = pending.length
-      ? `<div class="fin-sub" style="margin-top:6px;">Repasse ainda não enviado, somando com o próximo mês: ${pending.map(t=> `${fmtBRL(t.valor)} para ${escapeHtml(t.enviadoPara)} (${escapeHtml(monthLabel(monthKey(t.data)))})`).join(', ')}.</div>`
-      : '';
 
     if(!hasAnyData){
       el.innerHTML = 'Nenhum lançamento ainda. O saldo entre sócias aparece aqui conforme vocês forem cadastrando gastos, vendas, saques e repasses.';
-    } else if(settlements.length === 0){
-      el.innerHTML = '<span class="fin-settle-ok">Contas equilibradas — ninguém deve nada no momento.</span>' + pendingNote;
+    } else if(pending.length === 0){
+      el.innerHTML = '<span class="fin-settle-ok">Nenhum repasse pendente no momento.</span>';
     } else {
-      const allKeys = [];
-      payments.forEach(p=> p.data && allKeys.push(monthKey(p.data)));
-      sales.forEach(s=> s.data && allKeys.push(monthKey(s.data)));
-      withdrawals.forEach(w=> w.data && allKeys.push(monthKey(w.data)));
-      transfers.forEach(t=> t.data && allKeys.push(monthKey(t.data)));
-      const earliestKey = allKeys.length ? allKeys.sort()[0] : null;
-      const sinceNote = earliestKey ? ` desde ${monthLabel(earliestKey)}` : '';
-      el.innerHTML = settlements.map(t=>
-        `<div><strong>${escapeHtml(t.from)}</strong> deve pagar <strong>${fmtBRL(t.amount)}</strong> para <strong>${escapeHtml(t.to)}</strong></div>`
-      ).join('') + `<div class="fin-sub" style="margin-top:6px;">Saldo acumulado de todos os meses${sinceNote} — soma gastos, vendas, saques e repasses até hoje.</div>` + pendingNote;
+      el.innerHTML = pending.map(t=>{
+        const sender = PARTNERS.find(name=> name !== t.enviadoPara) || '';
+        return `<div><strong>${escapeHtml(sender)}</strong> deve pagar <strong>${fmtBRL(t.valor)}</strong> para <strong>${escapeHtml(t.enviadoPara)}</strong> <span class="fin-sub">(${escapeHtml(monthLabel(monthKey(t.data)))})</span></div>`;
+      }).join('') + '<div class="fin-sub" style="margin-top:6px;">Repasses marcados como "próximo mês" e ainda não enviados.</div>';
     }
   }
 
@@ -1763,155 +1645,6 @@
         </div>
       `;
     }).join('');
-  }
-
-  // Uma linha por mês, em ordem cronológica. "Saldo do mês" é só
-  // gastos+saque desse mês (lucro fica de fora — vendas não geram dívida
-  // entre sócias enquanto o dinheiro não é sacado da reserva). "Saldo p/
-  // próximo mês" NÃO é recalculado sozinho a partir dos repasses — o
-  // histórico deles mistura acerto de gastos+saque com outras coisas
-  // (repasse de lucro etc.) que não dá pra separar com certeza. Por isso
-  // esse valor é editável (tabela monthly_balances): o sistema só sugere
-  // um ponto de partida (carry do mês anterior + saldo deste mês) e a
-  // própria sócia ajusta a mão quando um repasse quita parte da dívida.
-  function computeVisaoGeralRows(){
-    const keys = new Set();
-    payments.forEach(p=> p.data && keys.add(monthKey(p.data)));
-    sales.forEach(s=> s.data && keys.add(monthKey(s.data)));
-    withdrawals.forEach(w=> w.data && keys.add(monthKey(w.data)));
-    transfers.forEach(t=> t.data && keys.add(monthKey(t.data)));
-    monthlyBalances.forEach(m=> keys.add(m.mk));
-    const orderedKeys = [...keys].sort();
-
-    const n = PARTNERS.length || 1;
-    let prevIsabela = 0, prevMariane = 0;
-
-    return orderedKeys.map(mk=>{
-      const mp = payments.filter(p=> monthKey(p.data) === mk);
-      const ms = sales.filter(s=> monthKey(s.data) === mk);
-      const mw = withdrawals.filter(w=> monthKey(w.data) === mk);
-      const mt = transfers.filter(t=> monthKey(t.data) === mk);
-
-      const totalGastos = mp.reduce((s,p)=> s + p.valor, 0);
-      const totalLucro = ms.reduce((s,x)=> s + x.lucro, 0);
-      const totalSaques = mw.reduce((s,w)=> s + w.valor, 0);
-      const fairShareGastos = totalGastos / n;
-      const fairShareSaques = totalSaques / n;
-
-      const paidByPartner = {};
-      const withdrawnByPartner = {};
-      PARTNERS.forEach(name=>{ paidByPartner[name] = 0; withdrawnByPartner[name] = 0; });
-      mp.forEach(p=>{ if(p.investidoPor in paidByPartner) paidByPartner[p.investidoPor] += p.valor; });
-      mw.forEach(w=>{ if(w.recebidoPor && w.recebidoPor in withdrawnByPartner) withdrawnByPartner[w.recebidoPor] += w.valor; });
-
-      const saldoDoMes = {};
-      PARTNERS.forEach(name=>{
-        saldoDoMes[name] = (paidByPartner[name] - fairShareGastos) + (fairShareSaques - withdrawnByPartner[name]);
-      });
-
-      const enviados = mt.filter(t=> t.tipo !== 'proximo_mes');
-      const pendentes = mt.filter(t=> t.tipo === 'proximo_mes');
-      const repassadoPorPartner = {};
-      PARTNERS.forEach(name=> repassadoPorPartner[name] = 0);
-      enviados.forEach(t=>{ if(t.enviadoPara in repassadoPorPartner) repassadoPorPartner[t.enviadoPara] += t.valor; });
-
-      const prevSigned = prevIsabela - prevMariane;
-      const mesSigned = (saldoDoMes['Isabela'] || 0) - (saldoDoMes['Mariane'] || 0);
-      const sugeridoSigned = prevSigned + mesSigned;
-      const sugerido = {
-        Isabela: Math.max(0, sugeridoSigned),
-        Mariane: Math.max(0, -sugeridoSigned),
-      };
-
-      const saved = monthlyBalances.find(m=> m.mk === mk);
-      const saldoProximoMes = saved
-        ? { Isabela: saved.saldoIsabela, Mariane: saved.saldoMariane }
-        : sugerido;
-
-      prevIsabela = saldoProximoMes.Isabela;
-      prevMariane = saldoProximoMes.Mariane;
-
-      return {
-        mk,
-        totalGastos, paidByPartner,
-        totalSaques, withdrawnByPartner,
-        totalLucro,
-        enviados, pendentes, repassadoPorPartner,
-        saldoDoMes,
-        saldoProximoMes,
-        isSaved: !!saved,
-      };
-    });
-  }
-
-  function renderVisaoGeral(){
-    const rows = computeVisaoGeralRows();
-    const body = $('visaoGeralBody');
-    if(rows.length === 0){
-      body.innerHTML = `<tr><td colspan="12" class="fin-empty">Nenhum lançamento ainda.</td></tr>`;
-      return;
-    }
-    body.innerHTML = rows.map(row=>{
-      const repassadoCell = name=>{
-        const list = row.enviados.filter(t=> t.enviadoPara === name);
-        const linhas = list.map(t=>
-          `<div class="vg-repasse-item" data-id="${t.id}">${fmtBRL(t.valor)}</div>`
-        ).join('');
-        return `${linhas}<div class="vg-repasse-add" data-mk="${row.mk}" data-para="${escapeHtml(name)}">+ repasse</div>`;
-      };
-      const saqueContas = PARTNERS
-        .filter(name=> row.withdrawnByPartner[name] > 0.005)
-        .map(name=> `${fmtBRL(row.withdrawnByPartner[name])} (${escapeHtml(name)})`)
-        .join('<br>') || '—';
-      const pendenteTexto = row.pendentes.length
-        ? `<div class="fin-sub">pendente: ${row.pendentes.map(t=> `${fmtBRL(t.valor)} → ${escapeHtml(t.enviadoPara)}`).join(', ')}</div>`
-        : '';
-      const temSaldo = computeSettlements(row.saldoDoMes).length > 0;
-      const pixStatus = !temSaldo
-        ? '—'
-        : (row.pendentes.length
-          ? `<span style="color:var(--danger);">● não enviado</span>`
-          : `<span style="color:var(--sage);">✓ enviado</span>`);
-      const sugestaoTexto = row.isSaved ? '' : `<div class="fin-sub">sugestão</div>`;
-      const carryInput = name => `
-        <input type="text" class="vg-carry-input" data-mk="${row.mk}" data-partner="${name}"
-          value="${fmtBRL(Math.max(0, row.saldoProximoMes[name] || 0)).replace('R$', '').trim()}">
-      `;
-      return `
-        <tr>
-          <td>${escapeHtml(monthLabel(row.mk))}</td>
-          <td>${fmtBRL(row.paidByPartner['Mariane'] || 0)}</td>
-          <td>${fmtBRL(row.paidByPartner['Isabela'] || 0)}</td>
-          <td>${repassadoCell('Isabela')}</td>
-          <td>${repassadoCell('Mariane')}</td>
-          <td>${fmtBRL(Math.max(0, row.saldoDoMes['Isabela'] || 0))}</td>
-          <td>${fmtBRL(Math.max(0, row.saldoDoMes['Mariane'] || 0))}</td>
-          <td>${pixStatus}${pendenteTexto}</td>
-          <td>${carryInput('Isabela')}${sugestaoTexto}</td>
-          <td>${carryInput('Mariane')}${sugestaoTexto}</td>
-          <td>${saqueContas}</td>
-          <td>${fmtBRL(row.totalLucro)}</td>
-        </tr>
-      `;
-    }).join('');
-    body.querySelectorAll('.vg-repasse-item').forEach(el=>{
-      el.addEventListener('click', ()=> openTransferModal(el.dataset.id));
-    });
-    body.querySelectorAll('.vg-repasse-add').forEach(el=>{
-      el.addEventListener('click', ()=> openTransferModal(null, { data: el.dataset.mk + '-15', enviadoPara: el.dataset.para }));
-    });
-    body.querySelectorAll('.vg-carry-input').forEach(inp=>{
-      inp.addEventListener('keydown', (e)=>{ if(e.key==='Enter') inp.blur(); });
-      inp.addEventListener('blur', async ()=>{
-        const mk = inp.dataset.mk;
-        const isabelaInp = body.querySelector(`.vg-carry-input[data-mk="${mk}"][data-partner="Isabela"]`);
-        const marianeInp = body.querySelector(`.vg-carry-input[data-mk="${mk}"][data-partner="Mariane"]`);
-        const isabelaVal = parseCurrency(isabelaInp.value) || 0;
-        const marianeVal = parseCurrency(marianeInp.value) || 0;
-        await saveMonthlyBalance(mk, isabelaVal, marianeVal);
-        renderVisaoGeral();
-      });
-    });
   }
 
   /* ---------------- Financeiro: selects compartilhados ---------------- */

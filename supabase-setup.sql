@@ -98,16 +98,28 @@ alter table transfers add column if not exists tipo text not null default 'envia
 
 create index if not exists transfers_data_idx on transfers (data);
 
--- Saldo pro próximo mês da aba "Visão geral" — ajustado manualmente por
--- Isabela/Mariane (não é recalculado sozinho), porque o histórico de
--- repasses mistura acerto de gastos+saque com outras coisas (repasse de
--- lucro, etc.) que uma fórmula fixa não consegue separar com certeza.
+-- Linha por mês da aba "Visão geral" — tudo aqui é ajustado manualmente
+-- por Isabela/Mariane (o app só sugere um valor inicial), porque o
+-- histórico de repasses mistura acerto de gastos+saque com outras coisas
+-- (repasse de lucro, etc.) que uma fórmula fixa não consegue separar com
+-- certeza.
 create table if not exists monthly_balances (
   id text primary key,
   saldo_isabela numeric(12,2) not null default 0,
   saldo_mariane numeric(12,2) not null default 0,
+  deveria_receber_isabela numeric(12,2) not null default 0,
+  deveria_receber_mariane numeric(12,2) not null default 0,
+  saldo_mes_isabela numeric(12,2) not null default 0,
+  saldo_mes_mariane numeric(12,2) not null default 0,
+  pix_enviado boolean not null default false,
   updated_at timestamptz not null default now()
 );
+
+alter table monthly_balances add column if not exists deveria_receber_isabela numeric(12,2) not null default 0;
+alter table monthly_balances add column if not exists deveria_receber_mariane numeric(12,2) not null default 0;
+alter table monthly_balances add column if not exists saldo_mes_isabela numeric(12,2) not null default 0;
+alter table monthly_balances add column if not exists saldo_mes_mariane numeric(12,2) not null default 0;
+alter table monthly_balances add column if not exists pix_enviado boolean not null default false;
 
 create table if not exists marketing (
   id integer primary key default 1,
