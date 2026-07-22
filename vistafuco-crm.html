@@ -314,6 +314,8 @@
   /* ---------- Financeiro ---------- */
   .financeiro{flex:1; display:none; overflow-y:auto; padding:18px 20px 30px;}
   .financeiro.active{display:block;}
+  .visaogeral{flex:1; display:none; overflow-y:auto; padding:18px 20px 30px;}
+  .visaogeral.active{display:block;}
   .fin-month-bar{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
   .fin-month-bar label{font-size:12.5px; font-weight:600; color:var(--ink-soft);}
   .fin-month-bar select{
@@ -445,6 +447,7 @@
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="board">Quadro</button>
       <button class="tab-btn" data-tab="financeiro">Financeiro</button>
+      <button class="tab-btn" data-tab="visaogeral">Visão geral</button>
       <button class="tab-btn" data-tab="marketing">Marketing</button>
     </div>
 
@@ -539,6 +542,30 @@
           </table>
         </div>
         <div class="fin-summary" id="repasseSplit" style="margin-top:12px; margin-bottom:0;"></div>
+      </div>
+    </div>
+
+    <div class="visaogeral" id="visaogeral">
+      <div class="fin-section">
+        <div class="fin-section-head">
+          <h2>Visão geral por mês</h2>
+        </div>
+        <div class="fin-table-scroll">
+          <table class="fin-table">
+            <thead>
+              <tr>
+                <th>Mês</th>
+                <th>Gastos (Mariane / Isabela)</th>
+                <th>Saque</th>
+                <th>Lucro</th>
+                <th>Repassado no mês</th>
+                <th>Saldo do mês (gastos+saque)</th>
+                <th>Acumulado até o mês</th>
+              </tr>
+            </thead>
+            <tbody id="visaoGeralBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -1075,6 +1102,7 @@
     document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b===btn));
     const tab = btn.dataset.tab;
     $('financeiro').classList.toggle('active', tab === 'financeiro');
+    $('visaogeral').classList.toggle('active', tab === 'visaogeral');
     $('marketing').classList.toggle('active', tab === 'marketing');
     $('board').style.display = tab === 'board' ? 'flex' : 'none';
     $('boardToolbar').style.display = tab === 'board' ? '' : 'none';
@@ -1437,6 +1465,7 @@
     renderWithdrawalsTable();
     renderTransfersTable();
     renderRepasseSplit();
+    renderVisaoGeral();
   }
 
   function populateMonthSelect(){
@@ -1464,7 +1493,7 @@
 
     const pending = transfers.filter(t=> t.tipo === 'proximo_mes');
     const pendingNote = pending.length
-      ? `<div class="fin-sub" style="margin-top:6px;">Repasse ainda não enviado, somando com o próximo mês: ${pending.map(t=> `${fmtBRL(t.valor)} para ${escapeHtml(t.enviadoPara)}`).join(', ')}.</div>`
+      ? `<div class="fin-sub" style="margin-top:6px;">Repasse ainda não enviado, somando com o próximo mês: ${pending.map(t=> `${fmtBRL(t.valor)} para ${escapeHtml(t.enviadoPara)} (${escapeHtml(monthLabel(monthKey(t.data)))})`).join(', ')}.</div>`
       : '';
 
     if(!hasAnyData){
@@ -1693,6 +1722,118 @@
           <div class="fin-label">Repassado para ${escapeHtml(name)}</div>
           <div class="fin-value">${fmtBRL(repassado[name])}</div>
         </div>
+      `;
+    }).join('');
+  }
+
+  // Uma linha por mês, em ordem cronológica, com o saldo do próprio mês
+  // (só gastos+saque, igual ao card de Repasses) e o saldo acumulado até
+  // aquele mês (igual à barra do topo — inclui lucro e abate repasses já
+  // enviados; repasse "próximo mês" fica de fora até ser marcado como
+  // enviado de fato), pra dar pra ver o carregamento de dívida mês a mês.
+  function computeVisaoGeralRows(){
+    const keys = new Set();
+    payments.forEach(p=> p.data && keys.add(monthKey(p.data)));
+    sales.forEach(s=> s.data && keys.add(monthKey(s.data)));
+    withdrawals.forEach(w=> w.data && keys.add(monthKey(w.data)));
+    transfers.forEach(t=> t.data && keys.add(monthKey(t.data)));
+    const orderedKeys = [...keys].sort();
+
+    const n = PARTNERS.length || 1;
+    const acumulado = {};
+    PARTNERS.forEach(name=> acumulado[name] = 0);
+
+    return orderedKeys.map(mk=>{
+      const mp = payments.filter(p=> monthKey(p.data) === mk);
+      const ms = sales.filter(s=> monthKey(s.data) === mk);
+      const mw = withdrawals.filter(w=> monthKey(w.data) === mk);
+      const mt = transfers.filter(t=> monthKey(t.data) === mk);
+
+      const totalGastos = mp.reduce((s,p)=> s + p.valor, 0);
+      const totalLucro = ms.reduce((s,x)=> s + x.lucro, 0);
+      const totalSaques = mw.reduce((s,w)=> s + w.valor, 0);
+      const fairShareGastos = totalGastos / n;
+      const fairShareLucro = totalLucro / n;
+      const fairShareSaques = totalSaques / n;
+
+      const paidByPartner = {};
+      const withdrawnByPartner = {};
+      PARTNERS.forEach(name=>{ paidByPartner[name] = 0; withdrawnByPartner[name] = 0; });
+      mp.forEach(p=>{ if(p.investidoPor in paidByPartner) paidByPartner[p.investidoPor] += p.valor; });
+      mw.forEach(w=>{ if(w.recebidoPor && w.recebidoPor in withdrawnByPartner) withdrawnByPartner[w.recebidoPor] += w.valor; });
+
+      const saldoDoMes = {};
+      PARTNERS.forEach(name=>{
+        saldoDoMes[name] = (paidByPartner[name] - fairShareGastos) + (fairShareSaques - withdrawnByPartner[name]);
+      });
+
+      PARTNERS.forEach(name=>{
+        acumulado[name] += paidByPartner[name] + (fairShareLucro - fairShareGastos + fairShareSaques);
+      });
+      mw.forEach(w=>{ if(w.recebidoPor && w.recebidoPor in acumulado) acumulado[w.recebidoPor] -= w.valor; });
+      mt.forEach(t=>{
+        if(t.tipo === 'proximo_mes') return;
+        if(t.enviadoPara in acumulado) acumulado[t.enviadoPara] -= t.valor;
+        const sender = PARTNERS.find(name=> name !== t.enviadoPara);
+        if(sender && sender in acumulado) acumulado[sender] += t.valor;
+      });
+
+      return {
+        mk,
+        totalGastos, paidByPartner,
+        totalSaques, withdrawnByPartner,
+        totalLucro,
+        enviados: mt.filter(t=> t.tipo !== 'proximo_mes'),
+        pendentes: mt.filter(t=> t.tipo === 'proximo_mes'),
+        saldoDoMes,
+        acumulado: { ...acumulado },
+      };
+    });
+  }
+
+  function describeSettlement(balance, emptyLabel){
+    const settlements = computeSettlements(balance);
+    if(settlements.length === 0) return `<span class="fin-settle-ok">${emptyLabel}</span>`;
+    return settlements.map(t=> `<strong>${escapeHtml(t.from)}</strong> deve ${fmtBRL(t.amount)} para <strong>${escapeHtml(t.to)}</strong>`).join('<br>');
+  }
+
+  function renderVisaoGeral(){
+    const rows = computeVisaoGeralRows();
+    const body = $('visaoGeralBody');
+    if(rows.length === 0){
+      body.innerHTML = `<tr><td colspan="7" class="fin-empty">Nenhum lançamento ainda.</td></tr>`;
+      return;
+    }
+    body.innerHTML = rows.map(row=>{
+      const saqueContas = PARTNERS
+        .filter(name=> row.withdrawnByPartner[name] > 0.005)
+        .map(name=> `${fmtBRL(row.withdrawnByPartner[name])} (${escapeHtml(name)})`)
+        .join('<br>') || '—';
+      const repassadoTexto = row.enviados.length
+        ? row.enviados.map(t=> `${fmtBRL(t.valor)} → ${escapeHtml(t.enviadoPara)}`).join('<br>')
+        : '—';
+      const pendenteTexto = row.pendentes.length
+        ? `<div class="fin-sub">pendente: ${row.pendentes.map(t=> `${fmtBRL(t.valor)} → ${escapeHtml(t.enviadoPara)}`).join(', ')}</div>`
+        : '';
+      // O status vem do tipo do repasse lançado (enviado x próximo mês),
+      // não de tentar casar valores — é o dado que a própria sócia marca
+      // como pago ou pendente ao lançar o repasse daquele mês.
+      const saldoSettlements = computeSettlements(row.saldoDoMes);
+      const statusTag = saldoSettlements.length === 0 ? '' : (
+        row.pendentes.length
+          ? `<div class="fin-sub" style="color:var(--danger);">● Pix não enviado</div>`
+          : `<div class="fin-sub" style="color:var(--sage);">✓ Pix enviado</div>`
+      );
+      return `
+        <tr>
+          <td>${escapeHtml(monthLabel(row.mk))}</td>
+          <td>${fmtBRL(row.paidByPartner['Mariane'] || 0)} / ${fmtBRL(row.paidByPartner['Isabela'] || 0)}</td>
+          <td>${saqueContas}</td>
+          <td>${fmtBRL(row.totalLucro)}</td>
+          <td>${repassadoTexto}${pendenteTexto}</td>
+          <td>${describeSettlement(row.saldoDoMes, 'Equilibrado')}${statusTag}</td>
+          <td>${describeSettlement(row.acumulado, 'Quitado')}</td>
+        </tr>
       `;
     }).join('');
   }
